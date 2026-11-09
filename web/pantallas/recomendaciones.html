@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Qué comprar en la oferta</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='4' fill='%232457c5'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/estaticos/estilos.css">
+</head>
+<body>
+  <main>
+    <header>
+      <h1>¿Qué juegos comprar en la oferta?</h1>
+      <p class="sub">Elige hasta 5 juegos que te gustaron y tu presupuesto. Te decimos qué comprar.</p>
+    </header>
+
+    <form id="formulario" novalidate>
+      <label for="buscar">Juegos que te gustaron</label>
+      <div class="buscador">
+        <input id="buscar" type="search" autocomplete="off" placeholder="Escribe un nombre, p. ej. DOOM" aria-describedby="ayuda-favoritos">
+        <ul id="sugerencias" role="listbox" hidden></ul>
+      </div>
+      <p id="ayuda-favoritos" class="ayuda">De 1 a <span id="max-favoritos">5</span> juegos.</p>
+      <ul id="favoritos" class="chips" aria-label="Favoritos elegidos"></ul>
+
+      <label for="presupuesto">Presupuesto (Q)</label>
+      <input id="presupuesto" type="number" min="0.01" max="10000" step="0.01" value="300" required>
+
+      <button id="enviar" type="submit">Recomendar</button>
+    </form>
+
+    <p id="error" class="error" role="alert" hidden></p>
+
+    <section id="resultado" hidden aria-live="polite">
+      <h2>Con <span id="r-presupuesto"></span>, compra estos</h2>
+      <ol id="lista" class="tarjetas"></ol>
+      <p id="vacia" hidden>No alcanza para ningún juego que pase el filtro de calidad. Prueba con más presupuesto.</p>
+      <p class="totales">Total <strong id="r-total"></strong> · Te sobran <strong id="r-restante"></strong></p>
+    </section>
+  </main>
+  <footer id="version"></footer>
+  <script src="/estaticos/recomendaciones.js"></script>
+</body>
+</html>

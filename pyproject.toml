@@ -1,0 +1,15 @@
+[tool.pytest.ini_options]
+pythonpath = ["."]          # para que las pruebas importen web.api
+testpaths = ["tests/unitarias"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+include = ["web/**/*.py", "tests/unitarias/**/*.py"]  # tests/integracion: pendiente de coordinar con su autor
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["web", "src", "conftest"]

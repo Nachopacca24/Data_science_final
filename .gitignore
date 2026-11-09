@@ -3,3 +3,8 @@ __pycache__/
 .ipynb_checkpoints/
 *.pyc
 .venv/
+
+# build: lo escribe el pipeline con el SHA
+web/VERSION
+.ruff_cache/
+.pytest_cache/

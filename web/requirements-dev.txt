@@ -1,0 +1,6 @@
+# Para desarrollar y correr pruebas y lint
+-r requirements.txt
+pytest==9.2.0
+httpx==0.28.1
+requests==2.34.2
+ruff==0.17.4

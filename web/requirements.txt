@@ -1,0 +1,4 @@
+# Lo que necesita la API en ejecución (sin pandas ni sklearn: lee web/catalogo_demo.csv)
+fastapi==0.162.2
+uvicorn==0.54.0
+pydantic==2.14.3
