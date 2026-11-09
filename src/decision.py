@@ -30,17 +30,25 @@ def tabla_candidatos(favoritos, descuento: float = C.DESCUENTO_TIPICO) -> pd.Dat
     pred = pd.read_csv(C.OUTPUTS / "pred_calidad.csv")[["appid", "p_bien_recibido"]]
     sim = similitud(favoritos).rename("similitud").reset_index().rename(columns={"index": "appid"})
 
-    t = (df[["appid", "nombre", "precio_lista_gtq", "es_gratis"]]
+    t = (df[["appid", "nombre", "precio_lista_gtq", "es_gratis", "pct_positivo", "total_resenas", "bien_recibido"]]
          .merge(pred, on="appid").merge(sim, on="appid"))
+    t["bien_recibido"] = t["bien_recibido"].astype(bool)
     t["precio_oferta_gtq"] = (t["precio_lista_gtq"] * (1 - descuento)).round(2)
     t["pasa_umbral"] = t["p_bien_recibido"] >= cargar_umbral()
     t["puntaje"] = t["p_bien_recibido"] * t["similitud"]
     return t
 
 
+# El modelo propone, las reseñas reales confirman.
+# El modelo estima la calidad SIN leer reseñas: sirve para juegos nuevos o con pocas reseñas.
+# Cuando el juego ya tiene reseñas (todos los del dataset tienen >= C.MIN_RESENAS), se usan para
+# confirmar: no se recomienda un juego que el modelo cree bueno pero las reseñas dicen que es malo,
+# y no se manda a evitar uno que el modelo cree malo pero las reseñas dicen que es bueno.
+
 def filtrar(cand: pd.DataFrame, n_candidatos: int = C.N_CANDIDATOS) -> pd.DataFrame:
-    """Se quedan los juegos de pago que pasan el umbral, y de esos los más parecidos a los favoritos."""
-    ok = cand[~cand["es_gratis"] & cand["pasa_umbral"]]
+    """Juegos de pago que pasan el umbral del modelo Y están bien reseñados de verdad;
+    de esos, los más parecidos a los favoritos."""
+    ok = cand[~cand["es_gratis"] & cand["pasa_umbral"] & cand["bien_recibido"]]
     return ok.nlargest(n_candidatos, "similitud")
 
 
@@ -96,6 +104,7 @@ def elegir_codicioso(cand: pd.DataFrame, presupuesto: float = C.PRESUPUESTO_GTQ,
 
 
 def evitar(cand: pd.DataFrame, n: int = 5) -> pd.DataFrame:
-    """Los juegos más tentadores (muy parecidos a los favoritos) que el modelo cree que NO serán bien recibidos."""
-    malos = cand[~cand["es_gratis"] & ~cand["pasa_umbral"]]
+    """Los juegos más tentadores (muy parecidos a los favoritos) que el modelo cree que NO serán
+    bien recibidos Y cuyas reseñas reales lo confirman (no más de 80 % positivas)."""
+    malos = cand[~cand["es_gratis"] & ~cand["pasa_umbral"] & ~cand["bien_recibido"]]
     return malos.nlargest(n, "similitud").reset_index(drop=True)

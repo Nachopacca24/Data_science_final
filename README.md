@@ -21,7 +21,9 @@ Para un jugador al que le gustaron **DOOM** y **Hades**, con Q300 y un descuento
 | Quake | Q15.36 |
 | **Total** | **Q284.30** |
 
-**Evitar:** SWORN, Dreamscaper, Wraithbinder, Rogue Girl y Paranautical Activity. Se parecen mucho a sus gustos, pero el modelo predice que no serán bien recibidos.
+**Evitar:** Paranautical Activity, Rogue Girl, Dead Purge: Outbreak, I Shall Remain y Perseus: Titan Slayer. Se parecen mucho a sus gustos, pero el modelo predice que no serán bien recibidos y sus reseñas reales lo confirman (entre 45 % y 69 % positivas).
+
+**El modelo propone, las reseñas reales confirman.** El modelo estima la calidad *sin leer reseñas*, así que sirve para juegos nuevos o con pocas reseñas. Cuando un juego ya tiene reseñas, se usan para confirmar: no se recomienda un juego con malas reseñas reales ni se manda a evitar uno con buenas.
 
 Lo que encontró cada notebook:
 
@@ -31,7 +33,7 @@ Lo que encontró cada notebook:
 | 02 · Clasificación | El boosting es el mejor modelo (AUC 0.81 en el examen, contra 0.50 del modelo perezoso). Con los costos del proyecto, el umbral es **0.66** y no 0.5. |
 | 03 · Recomendador | La similitud coseno sobre etiquetas y géneros encuentra juegos parecidos a los favoritos. k-Means agrupa los juegos en 5 familias (el silhouette es bajo: las familias se traslapan). |
 | 04 · Causal | Un descuento grande no indica en general un juego peor. Comparado con un descuento pequeño sí sale peor (5.8 puntos menos de % positivo dentro de grupos de antigüedad), pero no se puede decir que el descuento lo cause. |
-| 05 · Decisión | Puntaje = calidad predicha × parecido. La mochila (programación dinámica) elige la mejor combinación dentro del presupuesto y supera al método codicioso. |
+| 05 · Decisión | Puntaje = calidad predicha × parecido. La mochila (programación dinámica) elige la mejor combinación dentro del presupuesto; con presupuestos chicos supera por mucho al método codicioso (con Q200: 2.75 contra 1.68). |
 
 ## Estructura
 
@@ -95,7 +97,7 @@ games.csv ──► src/datos.py ──► juegos.parquet ─┬─► 02 clasif
 2. **Calidad (02).** Clasificadores comparados contra el modelo perezoso con Pipeline + validación cruzada estratificada. Precision, recall y AUC; el examen se usa una vez. Umbral elegido por costos: comprar un juego malo cuesta 1, perderse uno bueno cuesta 0.5.
 3. **Gustos (03).** Cada juego = vector de etiquetas/géneros; similitud coseno con los favoritos. k-Means + silhouette + PCA para familias de juegos.
 4. **Causal (04).** ¿Descuento grande → peor juego? Antigüedad como confusor; comparación dentro de grupos de antigüedad.
-5. **Decisión (05).** Puntaje = calidad predicha × parecido; se elige la mejor combinación dentro del presupuesto (máximo 5 juegos) usando el precio en oferta.
+5. **Decisión (05).** Puntaje = calidad predicha × parecido; se elige la mejor combinación dentro del presupuesto (máximo 5 juegos) usando el precio en oferta. Las reseñas reales confirman lo que dice el modelo antes de recomendar o mandar a evitar un juego.
 
 ## Reglas del equipo
 
