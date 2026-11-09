@@ -8,6 +8,31 @@ La salida es una lista concreta: *"con Q300, compra estos 5"*.
 
 ---
 
+## Resultado
+
+Para un jugador al que le gustaron **DOOM** y **Hades**, con Q300 y un descuento supuesto de 50 %:
+
+| Compra | Precio en oferta |
+|---|---|
+| DOOM Eternal | Q153.84 |
+| Far Cry | Q38.38 |
+| Risk of Rain (2013) | Q38.30 |
+| DOOM + DOOM II | Q38.42 |
+| Quake | Q15.36 |
+| **Total** | **Q284.30** |
+
+**Evitar:** SWORN, Dreamscaper, Wraithbinder, Rogue Girl y Paranautical Activity. Se parecen mucho a sus gustos, pero el modelo predice que no serán bien recibidos.
+
+Lo que encontró cada notebook:
+
+| Notebook | Resultado principal |
+|---|---|
+| 01 · Datos | 44,568 juegos con ≥ 20 reseñas; 52.8 % son "bien recibidos" (> 80 % de reseñas positivas). |
+| 02 · Clasificación | El boosting es el mejor modelo (AUC 0.81 en el examen, contra 0.50 del modelo perezoso). Con los costos del proyecto, el umbral es **0.66** y no 0.5. |
+| 03 · Recomendador | La similitud coseno sobre etiquetas y géneros encuentra juegos parecidos a los favoritos. k-Means agrupa los juegos en 5 familias (el silhouette es bajo: las familias se traslapan). |
+| 04 · Causal | Un descuento grande no indica en general un juego peor. Comparado con un descuento pequeño sí sale peor (5.8 puntos menos de % positivo dentro de grupos de antigüedad), pero no se puede decir que el descuento lo cause. |
+| 05 · Decisión | Puntaje = calidad predicha × parecido. La mochila (programación dinámica) elige la mejor combinación dentro del presupuesto y supera al método codicioso. |
+
 ## Estructura
 
 ```
@@ -18,29 +43,36 @@ Data_science_final/
 ├── src/                         # código compartido (lo importan todos los notebooks)
 │   ├── config.py                # rutas, supuestos (presupuesto, tasa Q/USD, umbral 80 %...) y columnas prohibidas
 │   ├── datos.py                 # descarga + limpieza -> data/processed/juegos.parquet
-│   └── recomendador.py          # (Persona B) recomendar(favoritos, k)
+│   ├── features.py              # construir_X(): predictores para el clasificador (sin columnas prohibidas)
+│   ├── recomendador.py          # similitud(favoritos) y recomendar(favoritos, k)
+│   └── decision.py              # puntaje, filtro de candidatos y mochila (elegir_optimo)
 ├── notebooks/
-│   ├── 01_datos.ipynb           # Persona A · limpieza y exploración
-│   ├── 02_clasificacion.ipynb   # Persona A · ¿será bien recibido? + umbral por costos
-│   ├── 03_recomendador_clusters.ipynb  # Persona B · similitud coseno + k-Means/PCA
-│   ├── 04_causal.ipynb          # Persona C · ¿descuento grande = juego peor?
-│   └── 05_decision.ipynb        # Persona C · lista de compra dentro del presupuesto
+│   ├── 01_datos.ipynb           # limpieza y exploración
+│   ├── 02_clasificacion.ipynb   # ¿será bien recibido? + umbral por costos
+│   ├── 03_recomendador_clusters.ipynb  # similitud coseno + k-Means/PCA
+│   ├── 04_causal.ipynb          # ¿descuento grande = juego peor?
+│   └── 05_decision.ipynb        # lista de compra dentro del presupuesto
 ├── data/                        # NO se sube a git (se genera solo)
 │   ├── raw/games.csv
 │   └── processed/juegos.parquet
-├── outputs/                     # resultados que pasan de un notebook a otro
-│   ├── pred_calidad.csv         # A -> C
-│   ├── clusters.csv             # B -> C
-│   └── figuras/
-└── informe/                     # documento final y presentación
+└── outputs/                     # resultados que pasan de un notebook a otro
+    ├── pred_calidad.csv         # 02 -> 05: probabilidad de ser bien recibido por juego
+    ├── umbral.json              # 02 -> 05: modelo y umbral elegidos
+    ├── 02_resultados_cv.csv, 02_resultados_examen.csv
+    ├── clusters.csv             # 03: familia de cada juego
+    ├── lista_compra_q300.csv    # 05: la decisión final
+    ├── lista_evitar.csv         # 05: juegos tentadores que conviene evitar
+    └── figuras/                 # una figura por resultado, con el número del notebook
 ```
 
-## Cómo empezar
+## Cómo correrlo
 
 ```bash
 pip install -r requirements.txt
 python -m src.datos        # descarga games.csv (~400 MB) y crea data/processed/juegos.parquet
 ```
+
+Después se abren los notebooks en orden (01 → 05) desde la carpeta `notebooks/`; la primera celda ya agrega la raíz del repo al path. El 05 necesita las salidas del 02.
 
 En cualquier notebook:
 
@@ -50,22 +82,20 @@ from src.datos import cargar_juegos
 df = cargar_juegos()       # 44,568 juegos con ≥ 20 reseñas
 ```
 
-Los notebooks se abren desde la carpeta `notebooks/`; la primera celda ya agrega la raíz del repo al path.
-
 ## Cómo funciona
 
 ```
 games.csv ──► src/datos.py ──► juegos.parquet ─┬─► 02 clasificación ──► pred_calidad.csv ─┐
-                                               ├─► 03 recomendador  ──► recomendar()     ─┼─► 05 decisión ──► lista Q300
+                                               ├─► 03 recomendador  ──► similitud()      ─┼─► 05 decisión ──► lista Q300
                                                └─► 04 causal (independiente)              │
                                                                                           ┘
 ```
 
 1. **Datos (01).** Un solo dataset limpio para todos. Objetivo: `bien_recibido = pct_positivo > 0.80`.
-2. **Calidad (02).** Clasificadores comparados contra el modelo perezoso con Pipeline + validación cruzada estratificada. Precision, recall y AUC; el examen se usa una vez. Umbral elegido por costos, no 0.5.
+2. **Calidad (02).** Clasificadores comparados contra el modelo perezoso con Pipeline + validación cruzada estratificada. Precision, recall y AUC; el examen se usa una vez. Umbral elegido por costos: comprar un juego malo cuesta 1, perderse uno bueno cuesta 0.5.
 3. **Gustos (03).** Cada juego = vector de etiquetas/géneros; similitud coseno con los favoritos. k-Means + silhouette + PCA para familias de juegos.
 4. **Causal (04).** ¿Descuento grande → peor juego? Antigüedad como confusor; comparación dentro de grupos de antigüedad.
-5. **Decisión (05).** Puntaje = calidad predicha × parecido; se elige la mejor combinación dentro del presupuesto usando el precio en oferta.
+5. **Decisión (05).** Puntaje = calidad predicha × parecido; se elige la mejor combinación dentro del presupuesto (máximo 5 juegos) usando el precio en oferta.
 
 ## Reglas del equipo
 
@@ -84,8 +114,9 @@ games.csv ──► src/datos.py ──► juegos.parquet ─┬─► 02 clasif
 
 ## División
 
-| Persona | Parte | Entrega |
-|---|---|---|
-| A | 01 datos, 02 clasificación y umbral | `juegos.parquet`, `pred_calidad.csv` |
-| B | 03 recomendador y clusters | `recomendar()`, `clusters.csv` |
-| C | 04 causal, 05 decisión, integración del informe | lista final, informe |
+| Parte | Responsable |
+|---|---|
+| 01 datos, 02 clasificación y umbral | José Ignacio Paccagnella |
+| 03 recomendador y clusters | Fabiola Deras Gutierrez |
+| 04 causal | Fabiola Deras Gutierrez |
+| 05 decisión | José Ignacio Paccagnella |
