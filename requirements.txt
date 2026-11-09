@@ -1,0 +1,8 @@
+pandas>=2.0
+pyarrow
+numpy
+scikit-learn>=1.3
+matplotlib
+seaborn
+huggingface_hub
+jupyter
