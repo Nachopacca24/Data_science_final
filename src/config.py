@@ -18,7 +18,10 @@ UMBRAL_BIEN_RECIBIDO = 0.80  # objetivo: > 80 % de reseñas positivas
 TASA_GTQ_USD = 7.70          # quetzales por dólar (supuesto fijo)
 DESCUENTO_TIPICO = 0.50      # plan B: descuento supuesto en la oferta de invierno
 PRESUPUESTO_GTQ = 300
-FECHA_REFERENCIA = "2026-11-08"  # fecha de la foto del dataset, para calcular antigüedad
+MAX_JUEGOS_LISTA = 5         # nadie juega 40 juegos: la lista final tiene como máximo 5
+N_CANDIDATOS = 300           # solo se consideran los juegos más parecidos a los favoritos
+FAVORITOS_EJEMPLO = [379720, 1145360]  # DOOM y Hades: el jugador de ejemplo del notebook 05
+FECHA_REFERENCIA = "2026-11-08"  # fecha usada para calcular antigüedad (no es la de la foto, que no se conoce con exactitud)
 SEMILLA = 42
 
 # Costos para elegir el umbral del clasificador (unidades relativas).
@@ -26,6 +29,19 @@ SEMILLA = 42
 # en una oferta grande hay muchos sustitutos buenos.
 COSTO_COMPRAR_MALO = 1.0   # falso positivo
 COSTO_PERDER_BUENO = 0.5   # falso negativo
+
+# Recomendador y clusters (notebook 03)
+MIN_JUEGOS_ETIQUETA = 50     # etiquetas que aparecen en menos juegos se ignoran (ruido)
+K_CLUSTERS = range(3, 13)    # valores de k que se prueban en k-Means
+MUESTRA_SILHOUETTE = 10_000  # silhouette con todos los juegos tarda mucho
+N_COMPONENTES_PCA = 10       # k-Means se corre sobre estos ejes de PCA, no sobre las 0/1
+K_FAMILIAS = 5               # silhouette casi plano entre k=3 y 12; 5 empata con el mejor y se puede nombrar
+
+# Pregunta causal (notebook 04): cortes de los niveles que se comparan
+CORTES_DESCUENTO = [-0.01, 0, 0.30, 0.60, 1]
+NIVELES_DESCUENTO = ["sin descuento", "hasta 30 %", "30 a 60 %", "más de 60 %"]
+CORTES_ANTIGUEDAD = [0, 2, 5, 10, float("inf")]
+GRUPOS_ANTIGUEDAD = ["0 a 2 años", "2 a 5 años", "5 a 10 años", "más de 10 años"]
 
 # Columnas que NO pueden usarse como predictores de calidad (fuga de datos:
 # salen de las reseñas o de la popularidad, que es lo que queremos predecir).
