@@ -1,0 +1,6 @@
+,umbral 0.66,umbral 0.50,perezoso
+AUC,0.811,0.811,0.5
+precision,0.815,0.736,0.527
+recall,0.577,0.767,1.0
+accuracy,0.708,0.732,0.527
+costo,0.18,0.206,0.473

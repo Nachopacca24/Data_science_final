@@ -1,0 +1,5 @@
+modelo,roc_auc,precision,recall,accuracy,auc_std
+perezoso,0.5,0.528,1.0,0.528,0.0
+logistica,0.776,0.719,0.728,0.706,0.004
+random_forest,0.795,0.721,0.771,0.722,0.004
+boosting,0.799,0.732,0.757,0.726,0.004

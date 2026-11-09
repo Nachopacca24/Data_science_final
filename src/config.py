@@ -21,6 +21,12 @@ PRESUPUESTO_GTQ = 300
 FECHA_REFERENCIA = "2026-11-08"  # fecha de la foto del dataset, para calcular antigüedad
 SEMILLA = 42
 
+# Costos para elegir el umbral del clasificador (unidades relativas).
+# Comprar un juego malo = perder el dinero completo. Perderse uno bueno duele menos:
+# en una oferta grande hay muchos sustitutos buenos.
+COSTO_COMPRAR_MALO = 1.0   # falso positivo
+COSTO_PERDER_BUENO = 0.5   # falso negativo
+
 # Columnas que NO pueden usarse como predictores de calidad (fuga de datos:
 # salen de las reseñas o de la popularidad, que es lo que queremos predecir).
 COLUMNAS_PROHIBIDAS = [

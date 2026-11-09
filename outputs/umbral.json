@@ -1,0 +1,7 @@
+{
+  "modelo": "boosting",
+  "umbral": 0.66,
+  "costo_comprar_malo": 1.0,
+  "costo_perder_bueno": 0.5,
+  "auc_examen": 0.8107
+}
