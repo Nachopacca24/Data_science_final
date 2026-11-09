@@ -53,6 +53,7 @@ def similitud(favoritos) -> pd.Series:
     ids = _a_appids(favoritos, juegos)
     perfil = M.loc[ids].mean(axis=0).to_numpy().reshape(1, -1)
     s = pd.Series(cosine_similarity(perfil, M.to_numpy())[0], index=M.index, name="similitud")
+    s = s.rename_axis("appid")  # para poder unirla por appid en el 05
     return s.drop(ids)
 
 
