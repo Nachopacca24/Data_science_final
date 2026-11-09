@@ -27,6 +27,13 @@ SEMILLA = 42
 COSTO_COMPRAR_MALO = 1.0   # falso positivo
 COSTO_PERDER_BUENO = 0.5   # falso negativo
 
+# Recomendador y clusters (notebook 03)
+MIN_JUEGOS_ETIQUETA = 50     # etiquetas que aparecen en menos juegos se ignoran (ruido)
+K_CLUSTERS = range(3, 13)    # valores de k que se prueban en k-Means
+MUESTRA_SILHOUETTE = 10_000  # silhouette con todos los juegos tarda mucho
+N_COMPONENTES_PCA = 10       # k-Means se corre sobre estos ejes de PCA, no sobre las 0/1
+K_FAMILIAS = 5               # silhouette casi plano entre k=3 y 12; 5 empata con el mejor y se puede nombrar
+
 # Columnas que NO pueden usarse como predictores de calidad (fuga de datos:
 # salen de las reseñas o de la popularidad, que es lo que queremos predecir).
 COLUMNAS_PROHIBIDAS = [
