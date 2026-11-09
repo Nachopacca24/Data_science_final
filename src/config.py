@@ -18,6 +18,9 @@ UMBRAL_BIEN_RECIBIDO = 0.80  # objetivo: > 80 % de reseñas positivas
 TASA_GTQ_USD = 7.70          # quetzales por dólar (supuesto fijo)
 DESCUENTO_TIPICO = 0.50      # plan B: descuento supuesto en la oferta de invierno
 PRESUPUESTO_GTQ = 300
+MAX_JUEGOS_LISTA = 5         # nadie juega 40 juegos: la lista final tiene como máximo 5
+N_CANDIDATOS = 300           # solo se consideran los juegos más parecidos a los favoritos
+FAVORITOS_EJEMPLO = [379720, 1145360]  # DOOM y Hades: el jugador de ejemplo del notebook 05
 FECHA_REFERENCIA = "2026-11-08"  # fecha de la foto del dataset, para calcular antigüedad
 SEMILLA = 42
 
