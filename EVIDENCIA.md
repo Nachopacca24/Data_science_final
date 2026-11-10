@@ -9,6 +9,21 @@ Se agregan aquí a medida que corren. Pestaña *Actions* del repo, workflow `pip
 | Fecha | Rama · SHA | lint | unitarias | build | dev | prod | correo | Enlace |
 |---|---|---|---|---|---|---|---|---|
 | 2026-11-10 01:40 UTC | `calidad_final` · `6edb8ec` | ✅ 19 s | ✅ 15 s | ✅ 19 s | ✅ 25 s | ✅ 20 s | — (no hubo falla) | [run 42737504756](https://github.com/Nachopacca24/Data_science_final/actions/runs/42737504756) |
+| 2026-11-10 | `calidad_final` · `f8952fb`¹ | ✅ 14 s | ✅ 17 s | ✅ 19 s | ✅ 23 s | ✅ 25 s | — (no hubo falla) | [run 42741136300](https://github.com/Nachopacca24/Data_science_final/actions/runs/42741136300) |
+| 2026-11-10 | `demo-rompe-unitarias` · `d1b4dc4` | ✅ 18 s | ❌ 24 s | ⏭ no corre | ⏭ no corre | ⏭ no corre | ❌ faltan secretos | [run 42741165796](https://github.com/Nachopacca24/Data_science_final/actions/runs/42741165796) |
+
+¹ Después de esa corrida se le cambió el título a ese commit. El contenido es idéntico, pero ahora es `8dbd20d`, "docs(ia): documenta sugerencias de IA (mías)".
+
+### Demo: el código se rompe y las pruebas unitarias detienen el build
+
+La rama `demo-rompe-unitarias` cambia **solo el código**, no las pruebas. En `web/api/esquemas.py`, `Field(gt=0, …)` pasa a `Field(ge=0, …)`: la API acepta un presupuesto de Q0, que el contrato prohíbe.
+
+| Etapa | Resultado |
+|---|---|
+| lint | ✅ el código es válido; el error es de lógica, no de estilo |
+| pruebas-unitarias | ❌ `FAILED tests/unitarias/test_entrada_api.py::test_presupuesto_invalido[0-cero] - AssertionError: {"presupuesto":0.0,"juegos":[],"total_gtq":0.0,"restante_gtq":0.0}` → `1 failed, 86 passed` |
+| build, dev, prod | ⏭ no corren: la versión rota nunca se construye ni se despliega |
+| correo | ❌ intentó avisar, pero `No se pudo enviar el correo: faltan los secretos SMTP_USUARIO, SMTP_CONTRASENA o CORREO_DESTINO.` Esta rama nunca se une a `calidad_final`. |
 
 Detalle de esa corrida (sacado de los logs):
 
@@ -24,7 +39,8 @@ Artefactos de la corrida: `imagen-<sha>`, `reporte-unitarias`, `reporte-integrac
 Por probar en GitHub:
 - [x] Corrida completa en verde (push a `calidad_final`).
 - [ ] Corrida a mano con `suite = smoke`.
-- [ ] Una falla a propósito llega por correo (necesita los secretos `SMTP_*`; ver README).
+- [x] Una falla a propósito pone el build en rojo y detiene el despliegue (`demo-rompe-unitarias`).
+- [ ] El correo de esa falla llega (pendiente: el dueño del repo tiene que agregar los secretos `SMTP_*`; ver README).
 - [ ] En un pull request, prod se salta.
 
 ## 2. Verificación local · 2026-11-09
