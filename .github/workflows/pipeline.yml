@@ -1,0 +1,135 @@
+# Pipeline: lint -> pruebas unitarias -> build único (imagen con el SHA) -> dev -> prod.
+# Si algo falla o se pasa de tiempo, se envía un correo con los datos del build.
+name: pipeline
+
+on:
+  push:
+    branches: [main, calidad_final]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: "Pruebas de integración en dev"
+        type: choice
+        options: [regresion, smoke]
+        default: regresion
+
+permissions:
+  contents: read
+
+env:
+  PYTHON: "3.12"
+  IMAGEN: recomendador:${{ github.sha }}
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ env.PYTHON }}
+          cache: pip
+          cache-dependency-path: web/requirements-dev.txt
+      - run: pip install -r web/requirements-dev.txt
+      - run: ruff check --output-format=github .
+
+  pruebas-unitarias:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ env.PYTHON }}
+          cache: pip
+          cache-dependency-path: web/requirements-dev.txt
+      - run: pip install -r web/requirements-dev.txt
+      - run: pytest tests/unitarias --junitxml=reportes/unitarias.xml
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: reporte-unitarias
+          path: reportes/
+
+  # Un solo build por commit. dev y prod usan exactamente esta imagen (no se vuelve a construir).
+  build:
+    needs: [lint, pruebas-unitarias]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - name: Construir la imagen con el SHA
+        run: docker build -f web/Dockerfile --build-arg APP_VERSION=${{ github.sha }} -t "$IMAGEN" .
+      - name: Guardar la imagen como artefacto
+        run: |
+          docker save "$IMAGEN" | gzip > imagen.tar.gz
+          echo "Imagen: $IMAGEN ($(du -h imagen.tar.gz | cut -f1))" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: imagen-${{ github.sha }}
+          path: imagen.tar.gz
+          retention-days: 7
+
+  dev:
+    needs: build
+    uses: ./.github/workflows/desplegar.yml
+    with:
+      ambiente: dev
+      puerto: 8001
+      suite: ${{ inputs.suite || 'regresion' }}
+
+  # prod solo después de que dev pasó, y nunca desde un pull request.
+  prod:
+    needs: dev
+    if: github.event_name != 'pull_request'
+    uses: ./.github/workflows/desplegar.yml
+    with:
+      ambiente: prod
+      puerto: 8002
+      suite: smoke
+
+  correo:
+    needs: [lint, pruebas-unitarias, build, dev, prod]
+    if: always() && (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      SMTP_USUARIO: ${{ secrets.SMTP_USUARIO }}
+      SMTP_CONTRASENA: ${{ secrets.SMTP_CONTRASENA }}
+      CORREO_DESTINO: ${{ secrets.CORREO_DESTINO }}
+    steps:
+      - name: Avisar si faltan los secretos del correo
+        if: env.SMTP_USUARIO == '' || env.SMTP_CONTRASENA == '' || env.CORREO_DESTINO == ''
+        run: |
+          echo "::error::No se pudo enviar el correo: faltan los secretos SMTP_USUARIO, SMTP_CONTRASENA o CORREO_DESTINO."
+          exit 1
+      - uses: dawidd6/action-send-mail@v22
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ env.SMTP_USUARIO }}
+          password: ${{ env.SMTP_CONTRASENA }}
+          from: Pipeline ${{ github.repository }} <${{ env.SMTP_USUARIO }}>
+          to: ${{ env.CORREO_DESTINO }}
+          subject: "[FALLA] ${{ github.repository }} · ${{ github.ref_name }} · ${{ github.sha }}"
+          body: |
+            Falló el pipeline #${{ github.run_number }} (intento ${{ github.run_attempt }}).
+
+            Repositorio: ${{ github.repository }}
+            Rama:        ${{ github.ref_name }}
+            Commit:      ${{ github.sha }}
+            Autor:       ${{ github.actor }}
+            Evento:      ${{ github.event_name }}
+            Mensaje:     ${{ github.event.head_commit.message || github.event.pull_request.title }}
+
+            Resultado por etapa:
+              lint ............... ${{ needs.lint.result }}
+              pruebas-unitarias .. ${{ needs.pruebas-unitarias.result }}
+              build .............. ${{ needs.build.result }}
+              dev ................ ${{ needs.dev.result }}
+              prod ............... ${{ needs.prod.result }}
+
+            Detalle y logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

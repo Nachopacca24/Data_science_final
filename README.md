@@ -65,6 +65,18 @@ Data_science_final/
     ├── lista_compra_q300.csv    # 05: la decisión final
     ├── lista_evitar.csv         # 05: juegos tentadores que conviene evitar
     └── figuras/                 # una figura por resultado, con el número del notebook
+
+# --- Sistema web y calidad (ver "Sistema web y pipeline" más abajo) ---
+├── web/                         # API, pantalla y catalogo_demo.csv (ver web/README.md)
+│   ├── CONTRATO_API.md          # formato oficial de la API
+│   └── Dockerfile               # la imagen que se despliega
+├── tests/
+│   ├── unitarias/               # sin servidor: validación de entrada, recomendador, catálogo
+│   └── integracion/             # caja negra contra la API desplegada (diseño en CASOS.md)
+├── ci/verificar_despliegue.py   # ¿la instancia está viva y es el SHA correcto?
+├── .github/workflows/           # pipeline.yml + desplegar.yml
+├── DECISIONES.md                # qué se decidió y por qué
+└── EVIDENCIA.md                 # qué se corrió y qué salió
 ```
 
 ## Cómo correrlo
@@ -98,6 +110,50 @@ games.csv ──► src/datos.py ──► juegos.parquet ─┬─► 02 clasif
 3. **Gustos (03).** Cada juego = vector de etiquetas/géneros; similitud coseno con los favoritos. k-Means + silhouette + PCA para familias de juegos.
 4. **Causal (04).** ¿Descuento grande → peor juego? Antigüedad como confusor; comparación dentro de grupos de antigüedad.
 5. **Decisión (05).** Puntaje = calidad predicha × parecido; se elige la mejor combinación dentro del presupuesto (máximo 5 juegos) usando el precio en oferta. Las reseñas reales confirman lo que dice el modelo antes de recomendar o mandar a evitar un juego.
+
+## Sistema web y pipeline
+
+La decisión del notebook 05 también está disponible como **API con una pantalla**: eliges tus juegos favoritos y tu presupuesto, y te devuelve qué comprar. Usa `web/catalogo_demo.csv` (500 juegos), así que no necesita el dataset completo. El formato de la API está en [web/CONTRATO_API.md](web/CONTRATO_API.md).
+
+```bash
+pip install -r web/requirements-dev.txt
+uvicorn web.api.main:app --reload          # pantalla en http://localhost:8000 · docs en /docs
+pytest                                     # pruebas unitarias
+ruff check .                               # lint
+API_URL=http://localhost:8000 pytest tests/integracion   # integración (con la API corriendo)
+```
+
+### Pipeline (GitHub Actions)
+
+Corre en cada push a `main` y a `calidad_final`, en cada pull request y a mano desde la pestaña *Actions*. A mano se elige `suite`: `regresion` o `smoke`.
+
+```
+lint ──┐
+       ├─► build ──► dev ──► prod          si algo falla ──► correo
+unit ──┘   (1 imagen   (verifica versión   (misma imagen,
+            con el SHA)  + regresión)        verifica versión + smoke)
+```
+
+| Etapa | Qué hace | Tiempo máximo |
+|---|---|---|
+| `lint` | `ruff check` | 5 min |
+| `pruebas-unitarias` | `pytest tests/unitarias` | 5 min |
+| `build` | construye **una sola** imagen Docker con el SHA adentro y la guarda como artefacto | 10 min |
+| `dev` | carga esa imagen, la levanta con `APP_AMBIENTE=dev`, verifica que `/version` sea el SHA y corre la suite elegida | 10 min |
+| `prod` | la **misma** imagen con `APP_AMBIENTE=prod`, verifica la versión y corre smoke. No corre en pull requests | 10 min |
+| `correo` | si una etapa falla o se pasa de tiempo, envía un correo con rama, SHA, autor, resultado de cada etapa y el enlace a los logs | 5 min |
+
+**Para que llegue el correo**, el dueño del repo debe agregar estos secretos en *Settings → Secrets and variables → Actions*:
+
+| Secreto | Valor |
+|---|---|
+| `SMTP_USUARIO` | cuenta de Gmail que envía, p. ej. `pipeline.equipo@gmail.com` |
+| `SMTP_CONTRASENA` | una [contraseña de aplicación](https://myaccount.google.com/apppasswords) de esa cuenta (no la contraseña normal) |
+| `CORREO_DESTINO` | a quién le llega; varios separados por coma |
+
+Si faltan, la etapa `correo` falla con un mensaje que lo dice: así no se pierde una falla sin que nadie se entere.
+
+Por qué se decidió así: [DECISIONES.md](DECISIONES.md). Qué se corrió y qué salió: [EVIDENCIA.md](EVIDENCIA.md).
 
 ## Reglas del equipo
 

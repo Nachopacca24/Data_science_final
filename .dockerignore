@@ -1,0 +1,8 @@
+# La imagen solo necesita web/: todo lo demás se queda fuera.
+*
+!web/
+web/VERSION
+web/construir_catalogo.py
+web/requirements-dev.txt
+**/__pycache__
+**/*.pyc

@@ -6,6 +6,7 @@ La API recomienda qué juegos comprar con un presupuesto. También sirve la pant
 web/
 ├── CONTRATO_API.md        # formato oficial de la API (para los demás)
 ├── catalogo_demo.csv      # 500 juegos que usa la API (se sube a git)
+├── Dockerfile             # imagen que despliega el pipeline (build único con el SHA)
 ├── construir_catalogo.py  # regenera el catálogo desde el dataset y outputs/
 ├── requirements.txt       # lo que necesita la API para correr
 ├── requirements-dev.txt   # + pruebas y lint
@@ -29,6 +30,14 @@ uvicorn web.api.main:app --reload       # pantalla: http://localhost:8000  ·  d
 ```
 
 Variables opcionales: `APP_VERSION` (SHA; por defecto se lee `web/VERSION`, y si no existe vale `local`) y `APP_AMBIENTE` (`dev` o `prod`; por defecto `dev`).
+
+## Con Docker (igual que el pipeline)
+
+```bash
+SHA=$(git rev-parse HEAD)
+docker build -f web/Dockerfile --build-arg APP_VERSION=$SHA -t recomendador:$SHA .
+docker run -p 8000:8000 -e APP_AMBIENTE=dev recomendador:$SHA
+```
 
 ## Pruebas y lint
 
