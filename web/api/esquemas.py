@@ -15,7 +15,7 @@ class PeticionRecomendaciones(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     # StrictFloat acepta 300 y 300.5, pero no "300" ni true.
-    presupuesto: Annotated[StrictFloat, Field(gt=0, le=config.PRESUPUESTO_MAX, allow_inf_nan=False)]
+    presupuesto: Annotated[StrictFloat, Field(ge=0, le=config.PRESUPUESTO_MAX, allow_inf_nan=False)]
     favoritos: Annotated[list[AppId], Field(min_length=1, max_length=config.MAX_FAVORITOS)]
 
     @field_validator("presupuesto")
