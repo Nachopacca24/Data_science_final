@@ -15,9 +15,13 @@ import requests
 API_URL = os.environ.get("API_URL", "http://localhost:8000").rstrip("/")
 TIEMPO_MAXIMO = 10  # segundos por petición
 
-# --- Contrato provisional: ajustar cuando D publique el formato oficial ---
+# --- Límites del contrato oficial (web/CONTRATO_API.md) ---
+# Se copian aquí a propósito, sin importar web/: son pruebas de caja negra y no leen el código.
 PRESUPUESTO_MAX = float(os.environ.get("PRESUPUESTO_MAX", 10_000))
 MAX_FAVORITOS = int(os.environ.get("MAX_FAVORITOS", 5))
+MAX_JUEGOS_LISTA = 5
+LIMITE_BUSQUEDA_MAX = 1_000
+MAX_BUSCAR = 100            # caracteres del texto de búsqueda
 APPID_INEXISTENTE = 999_999_999
 
 
@@ -50,9 +54,9 @@ def api():
 
 @pytest.fixture(scope="session")
 def catalogo(api):
-    """Juegos de referencia tomados de la propia API, para no depender del código.
-    TODO: cuando exista web/catalogo_demo.csv, fijar aquí appids conocidos de ese archivo."""
-    r = api.get("/juegos", params={"buscar": "", "limite": 1000})
+    """Juegos de referencia tomados de la propia API (no del CSV), para no depender del código ni
+    de qué juegos tenga el catálogo: si el catálogo cambia, las pruebas siguen sirviendo."""
+    r = api.get("/juegos", params={"buscar": "", "limite": LIMITE_BUSQUEDA_MAX})
     r.raise_for_status()
     return r.json()
 

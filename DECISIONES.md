@@ -33,7 +33,7 @@ Detalle completo en el [README](README.md) y en los notebooks.
 | # | Decisión | Por qué |
 |---|---|---|
 | P1 | Las pruebas de integración son de **caja negra** contra la API desplegada: partición de equivalencia, valores límite y tabla de decisión | Diseño de José Ignacio en [tests/integracion/CASOS.md](tests/integracion/CASOS.md). Prueban lo que ve quien usa la API, no el código. |
-| P2 | Dos suites: **smoke** (3 casos: ¿está viva?) y **regresión** (los 34) | dev corre la regresión. prod corre smoke: si dev ya pasó, en prod basta confirmar que la instancia está viva y es la versión correcta. |
+| P2 | Dos suites: **smoke** (3 casos: ¿está viva?) y **regresión** (los 59: los 34 del diseño original más 25 del contrato oficial) | dev corre la regresión. prod corre smoke: si dev ya pasó, en prod basta confirmar que la instancia está viva y es la versión correcta. |
 | P3 | Las pruebas unitarias corren **sin servidor** (`TestClient`) y usan un catálogo hecho a mano para la lógica | Son rápidas (menos de 1 s) y no dependen de los datos. Se comprobó que detectan errores: al meter fallas a propósito, las pruebas fallaron (ver EVIDENCIA). |
 | P4 | El lint (`ruff`) cubre todo el código del sistema y de las pruebas: `web/`, `ci/`, `tests/unitarias/` y `tests/integracion/` | Las pruebas también son código: si una prueba tiene un import roto o una variable sin usar, puede pasar sin probar nada. Los 2 avisos de orden de imports de `tests/integracion/` se arreglaron con `ruff check --fix`. |
 
