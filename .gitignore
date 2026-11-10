@@ -1,4 +1,8 @@
-data/
+# datos: el CSV crudo (~400 MB) no se sube; el parquet limpio (5.6 MB) sí
+data/*
+!data/processed/
+data/processed/*
+!data/processed/juegos.parquet
 __pycache__/
 .ipynb_checkpoints/
 *.pyc
