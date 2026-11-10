@@ -3,7 +3,6 @@ import pytest
 
 from conftest import APPID_INEXISTENTE
 
-
 # ---------- smoke: la API está viva ----------
 
 @pytest.mark.smoke

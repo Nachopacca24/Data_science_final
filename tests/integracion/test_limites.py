@@ -1,8 +1,7 @@
 """Valores límite: los dos lados de cada límite (ver CASOS.md, sección 2)."""
 import pytest
 
-from conftest import PRESUPUESTO_MAX, MAX_FAVORITOS
-
+from conftest import MAX_FAVORITOS, PRESUPUESTO_MAX
 
 # ---------- presupuesto ----------
 

@@ -6,7 +6,7 @@ addopts = "-ra"
 [tool.ruff]
 line-length = 120
 target-version = "py311"
-include = ["web/**/*.py", "ci/**/*.py", "tests/unitarias/**/*.py"]  # tests/integracion: pendiente de coordinar con su autor
+include = ["web/**/*.py", "ci/**/*.py", "tests/unitarias/**/*.py", "tests/integracion/**/*.py"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP"]
