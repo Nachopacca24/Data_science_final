@@ -6,16 +6,16 @@ Para qué usamos IA en el proyecto, qué aceptamos, qué rechazamos o corregimos
 
 ## José Ignacio Paccagnella · notebooks 01, 02 y 05
 
-**Herramienta:** Claude (Claude Code, dentro de VS Code). Lo usé como asistente de programación: escribía código y texto que yo revisaba, corría y aceptaba o corregía.
+**Herramienta:** Claude (Claude Code, dentro de VS Code).
 
-### Para qué la usé
+### Cómo me ayudó
 
-| Parte | Qué le pedí | Qué hice yo |
-|---|---|---|
-| Estructura | Proponer la estructura del repo (`src/` compartido, un notebook por parte, `outputs/` con `appid` como llave) y el README | Revisé la propuesta y dividí el trabajo del grupo sobre esa estructura |
-| 01 · Datos | Código de descarga y limpieza (`src/datos.py`) y exploración | Revisé la limpieza y los hallazgos; el corte de > 80 % positivo viene de nuestra propuesta |
-| 02 · Clasificación | Pipeline, validación cruzada, umbral por costos, importancia por permutación y el análisis de dónde falla | Elegí los costos con el grupo y revisé que el examen se usara una sola vez |
-| 05 · Decisión | Puntaje, mochila con programación dinámica y comparación con el método codicioso | Definí la decisión (Q300, máximo 5 juegos) y revisé cada conclusión contra las tablas |
+| Parte | Cómo me ayudó |
+|---|---|
+| Estructura | Ideas para organizar el repo y el README |
+| 01 · Datos | Entender cómo venían los datos crudos, cómo revisarlos y qué problemas tenían antes de limpiarlos |
+| 02 · Clasificación | Apoyo en partes técnicas del código: el Pipeline, la validación cruzada y el cálculo del umbral por costos |
+| 05 · Decisión | Apoyo técnico con la mochila y revisar que las conclusiones coincidieran con las tablas |
 
 ### Lo que aceptamos, y cómo lo verificamos
 
@@ -31,16 +31,10 @@ Para qué usamos IA en el proyecto, qué aceptamos, qué rechazamos o corregimos
 
 | # | Qué pasó | Qué hicimos |
 |---|---|---|
-| 1 | La IA dio por hecho que había que entregar un **informe** y lo puso en el README y en la división del trabajo | El enunciado no lo pide. Le preguntamos de dónde lo había sacado, admitió que fue una suposición suya y lo quitamos. |
-| 2 | La primera **lista de "evitar"** usaba solo el modelo. Otra revisión con IA nos avisó que 3 de los 5 juegos tenían buenas reseñas reales (Dreamscaper 88 %, SWORN 83 %) | Lo comprobamos con los datos: era cierto. Cambiamos la regla a **"el modelo propone, las reseñas reales confirman"**, en la lista de compra y en la de evitar. Esa misma revisión traía un dato al revés ("deja pasar el 58 % de los buenos", cuando en realidad *detecta* el 58 %), y no lo usamos. |
-| 3 | Una conclusión del notebook 05 decía que *PERISH* quedaba fuera por su calidad predicha | Al volver a correr el notebook vimos que en realidad sí pasaba el umbral (0.72). La conclusión se corrigió: queda fuera por sus reseñas reales (72 %). |
-| 4 | La conclusión decía que la mochila le ganaba al codicioso con Q300 | Después del cambio de la regla, con Q300 empatan. Probamos otros presupuestos, vimos que con Q50 a Q200 la mochila gana por mucho (con Q200, 2.75 contra 1.68) y cambiamos la tabla y la conclusión. |
-| 5 | En el análisis de dónde falla el modelo, el primer borrador decía que la precision se mantenía "en 0.80 a 0.81" en los grupos con bajo recall | No era cierto para Early Access (0.775) ni para los gratis (0.787). Se reescribió para hablar solo de los grupos donde sí se cumple. |
-
-### Lo que aprendí
-
-- La IA escribe rápido código que corre, pero **que corra no quiere decir que la conclusión sea cierta**. Los errores que encontramos (2 a 5) no eran de código: eran conclusiones que no coincidían con los números o con la realidad.
-- Lo que más sirvió fue revisar los resultados contra el dato real (las reseñas) y contra un método simple (fuerza bruta, método codicioso, modelo perezoso).
+| 1 | La primera **lista de "evitar"** usaba solo el modelo. Otra revisión con IA nos avisó que 3 de los 5 juegos tenían buenas reseñas reales (Dreamscaper 88 %, SWORN 83 %) | Lo comprobamos con los datos: era cierto. Cambiamos la regla a **"el modelo propone, las reseñas reales confirman"**, en la lista de compra y en la de evitar. Esa misma revisión traía un dato al revés ("deja pasar el 58 % de los buenos", cuando en realidad *detecta* el 58 %), y no lo usamos. |
+| 2 | Una conclusión del notebook 05 decía que *PERISH* quedaba fuera por su calidad predicha | Al volver a correr el notebook vimos que en realidad sí pasaba el umbral (0.72). La conclusión se corrigió: queda fuera por sus reseñas reales (72 %). |
+| 3 | La conclusión decía que la mochila le ganaba al codicioso con Q300 | Después del cambio de la regla, con Q300 empatan. Probamos otros presupuestos, vimos que con Q50 a Q200 la mochila gana por mucho (con Q200, 2.75 contra 1.68) y cambiamos la tabla y la conclusión. |
+| 4 | En el análisis de dónde falla el modelo, el primer borrador decía que la precision se mantenía "en 0.80 a 0.81" en los grupos con bajo recall | No era cierto para Early Access (0.775) ni para los gratis (0.787). Se reescribió para hablar solo de los grupos donde sí se cumple. |
 
 ---
 
@@ -48,11 +42,11 @@ Para qué usamos IA en el proyecto, qué aceptamos, qué rechazamos o corregimos
 
 _(pendiente: Fabi completa su parte con el mismo formato)_
 
-### Para qué la usé
+### Cómo me ayudó
 
-| Parte | Qué le pedí | Qué hice yo |
-|---|---|---|
-| | | |
+| Parte | Cómo me ayudó |
+|---|---|
+| | |
 
 ### Lo que aceptamos, y cómo lo verificamos
 
