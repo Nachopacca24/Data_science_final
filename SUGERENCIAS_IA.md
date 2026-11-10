@@ -5,6 +5,7 @@ Sugerencias que hizo un asistente de IA durante el proyecto, qué se hizo con ca
 | # | Quién | Asistente |
 |---|---|---|
 | IA-1 a IA-3 | Mati | Claude (Claude Code) |
+| IA-4 | Fabiola | Claude (Claude Code) |
 
 ## IA-1 · La mochila en centavos, no en quetzales redondeados (Mati)
 
@@ -35,6 +36,14 @@ Sugerencias que hizo un asistente de IA durante el proyecto, qué se hizo con ca
 **Decisión.** Se aceptó. Se avisó a Pacca, y él mismo arregló sus 2 avisos y metió `tests/integracion/` al lint en su commit `d5e41ca` (DECISIONES P4).
 
 **Comprobación.** Las 34 pruebas de integración de Pacca corrieron sin cambios contra la API (corrida 42737504756), y ahora `ruff check .` pasa con todo el código de pruebas incluido.
+
+## IA-4 · La puerta de cobertura con source y omit, no con include (Fabiola)
+
+**Sugerencia.** La primera versión de la puerta listaba los módulos de negocio con `include`. Al probar que la puerta sí detiene el build, la IA notó que corriendo solo `test_catalogo_y_config.py` la cobertura salía en 98 %: con `include`, un módulo que ninguna prueba importa no aparece en el reporte. Propuso medir con `source = ["web/api"]` y sacar con `omit` lo que no es negocio, para que un módulo sin pruebas cuente como 0 %.
+
+**Decisión.** Se aceptó (DECISIONES U4).
+
+**Comprobación.** Con la misma corrida parcial, la cobertura baja a 32 % y pytest termina con exit 1. Con todas las pruebas sale 100 % y pasa.
 
 ## Lo que la IA hizo mal y se corrigió
 
