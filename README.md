@@ -125,7 +125,7 @@ API_URL=http://localhost:8000 pytest tests/integracion   # integración (con la 
 
 ### Pipeline (GitHub Actions)
 
-Corre en cada push a `main` y a `calidad_final`, en cada pull request y a mano desde la pestaña *Actions*. A mano se elige `suite`: `regresion` o `smoke`.
+Corre en cada push a `main`, `calidad_final` y a las ramas `demo-rompe-*`, en cada pull request y a mano desde la pestaña *Actions*. A mano se elige `suite`: `regresion` o `smoke`.
 
 ```
 lint ──┐

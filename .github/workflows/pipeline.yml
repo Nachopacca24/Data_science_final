@@ -4,7 +4,7 @@ name: pipeline
 
 on:
   push:
-    branches: [main, calidad_final]
+    branches: [main, calidad_final, "demo-rompe-*"]  # las demo deben poner el build en rojo
   pull_request:
   workflow_dispatch:
     inputs:
