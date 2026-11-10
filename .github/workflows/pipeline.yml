@@ -46,7 +46,16 @@ jobs:
           cache: pip
           cache-dependency-path: web/requirements-dev.txt
       - run: pip install -r web/requirements-dev.txt
-      - run: pytest tests/unitarias --junitxml=reportes/unitarias.xml
+      # Puerta de cobertura: si los módulos de negocio bajan del umbral (pyproject.toml), el build se detiene aquí.
+      - name: Pruebas unitarias y puerta de cobertura
+        run: >
+          pytest tests/unitarias --junitxml=reportes/unitarias.xml
+          --cov --cov-report=term-missing --cov-report=xml:reportes/cobertura.xml
+      - name: Cobertura en el resumen del build
+        if: always()
+        run: |
+          echo "### Cobertura de los módulos de negocio" >> "$GITHUB_STEP_SUMMARY"
+          coverage report --format=markdown >> "$GITHUB_STEP_SUMMARY" || true
       - uses: actions/upload-artifact@v7
         if: always()
         with:

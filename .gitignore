@@ -8,3 +8,5 @@ __pycache__/
 web/VERSION
 .ruff_cache/
 .pytest_cache/
+.coverage
+coverage.xml

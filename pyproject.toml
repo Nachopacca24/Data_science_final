@@ -13,3 +13,14 @@ select = ["E", "F", "W", "I", "B", "UP"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["web", "src", "conftest"]
+
+# Puerta de cobertura: solo los módulos de negocio (ver DECISIONES.md, sección 5).
+[tool.coverage.run]
+branch = true
+source = ["web/api"]
+# Fuera de la puerta: conexión HTTP, formato de errores y configuración (los cubren integración y e2e).
+omit = ["web/api/__init__.py", "web/api/main.py", "web/api/errores.py", "web/api/config.py"]
+
+[tool.coverage.report]
+fail_under = 90
+show_missing = true
