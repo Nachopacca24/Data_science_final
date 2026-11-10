@@ -8,10 +8,21 @@ Se agregan aquí a medida que corren. Pestaña *Actions* del repo, workflow `pip
 
 | Fecha | Rama · SHA | lint | unitarias | build | dev | prod | correo | Enlace |
 |---|---|---|---|---|---|---|---|---|
-| pendiente: primera corrida al subir el pipeline | | | | | | | | |
+| 2026-11-10 01:40 UTC | `calidad_final` · `6edb8ec` | ✅ 19 s | ✅ 15 s | ✅ 19 s | ✅ 25 s | ✅ 20 s | — (no hubo falla) | [run 42737504756](https://github.com/Nachopacca24/Data_science_final/actions/runs/42737504756) |
+
+Detalle de esa corrida (sacado de los logs):
+
+| Etapa | Salida |
+|---|---|
+| pruebas-unitarias | `87 passed` (Python 3.12.16). Hay 1 aviso de la librería: Starlette sugiere `httpx2`; no afecta |
+| build | artefacto `imagen-6edb8ec5fd2022bf90eda0ea0d7cf0dfaee3caf6` |
+| dev | `OK: http://localhost:8001 responde version=6edb8ec5fd2022bf90eda0ea0d7cf0dfaee3caf6 ambiente=dev` → `34 passed` (regresión) |
+| prod | `OK: http://localhost:8002 responde version=6edb8ec5fd2022bf90eda0ea0d7cf0dfaee3caf6 ambiente=prod` → `3 passed, 31 deselected` (smoke) |
+
+Artefactos de la corrida: `imagen-<sha>`, `reporte-unitarias`, `reporte-integracion-dev` y `reporte-integracion-prod` (JUnit XML).
 
 Por probar en GitHub:
-- [ ] Corrida completa en verde (push a `calidad_final`).
+- [x] Corrida completa en verde (push a `calidad_final`).
 - [ ] Corrida a mano con `suite = smoke`.
 - [ ] Una falla a propósito llega por correo (necesita los secretos `SMTP_*`; ver README).
 - [ ] En un pull request, prod se salta.
