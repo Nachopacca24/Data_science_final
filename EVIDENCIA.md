@@ -1,6 +1,6 @@
 # Evidencia
 
-Qué se corrió, cuándo y qué salió. Solo resultados reales: lo que todavía no se ha corrido dice **pendiente**.
+Qué se corrió, cuándo y qué salió. Solo se registran resultados reales; los estados no ejecutados o no verificables se indican explícitamente.
 
 ## 1. Corridas del pipeline en GitHub Actions
 
@@ -11,7 +11,15 @@ Se agregan aquí a medida que corren. Pestaña *Actions* del repo, workflow `pip
 | 2026-11-10 01:40 UTC | `calidad_final` · `6edb8ec` | ✅ 19 s | ✅ 15 s | ✅ 19 s | ✅ 25 s | ✅ 20 s | — (no hubo falla) | [run 42737504756](https://github.com/Nachopacca24/Data_science_final/actions/runs/42737504756) |
 | 2026-11-10 | `calidad_final` · `f8952fb`¹ | ✅ 14 s | ✅ 17 s | ✅ 19 s | ✅ 23 s | ✅ 25 s | — (no hubo falla) | [run 42741136300](https://github.com/Nachopacca24/Data_science_final/actions/runs/42741136300) |
 | 2026-11-10 | `demo-rompe-unitarias` · `d1b4dc4` | ✅ 18 s | ❌ 24 s | ⏭ no corre | ⏭ no corre | ⏭ no corre | ❌ faltan secretos | [run 42741165796](https://github.com/Nachopacca24/Data_science_final/actions/runs/42741165796) |
-| 2026-11-11 | `demo-rompe-e2e` · `810d14c` | ✅ COMPLETAR s | ✅ COMPLETAR s | ✅ COMPLETAR s | ❌ e2e COMPLETAR s | ⏭ no corre | ❌ faltan secretos | [run COMPLETAR](COMPLETAR enlace) |
+| 2026-11-11 | `demo-rompe-e2e` · `810d14c` | ✅ | ✅ | ✅ | ✅ integración pasa; ❌ E2E regresión falla | ⏭ no corre | ❌ faltan secretos | No se dispone del enlace de esta corrida |
+| No indicada | `calidad_final` · `10837c8` | ✅ | ✅ | ✅ | ✅ 59 integración + 6 E2E (regresión) | ✅ 3 integración + 2 E2E (smoke) | — (no hubo falla) | [run 43159181319](https://github.com/Nachopacca24/Data_science_final/actions/runs/43159181319) |
+| 2026-11-11 | `demo-rompe-integracion` · `c77f931` | ✅ | ✅ | ✅ | ❌ integración: 58 pasaron, 1 falló; E2E no se ejecutó | ⏭ no corre | ❌ faltan secretos SMTP | [run 43166417928 (#18)](https://github.com/Nachopacca24/Data_science_final/actions/runs/43166417928) · 1 min 10 s |
+
+La corrida #17 duró 2 min 34 s y usó Chromium. El registro E2E identifica la URL probada, el ambiente, el navegador y la suite.
+
+### Evidencia de ejecución manual con `suite=smoke`
+
+La documentación disponible no acredita una ejecución manual desde Actions → `pipeline` → `Run workflow` seleccionando `suite=smoke` para dev. La corrida #17 acredita regresión en dev y smoke en prod; como prod usa smoke por configuración, ese resultado no demuestra que se haya seleccionado smoke manualmente para dev. Para acreditar esa actividad se requiere el enlace de la corrida manual y sus resultados de integración y E2E en dev.
 
 ¹ Después de esa corrida se le cambió el título a ese commit. El contenido es idéntico, pero ahora es `8dbd20d`, "docs(ia): documenta sugerencias de IA (mías)".
 
@@ -26,7 +34,7 @@ La rama `demo-rompe-unitarias` cambia **solo el código**, no las pruebas. En `w
 | build, dev, prod | ⏭ no corren: la versión rota nunca se construye ni se despliega |
 | correo | ❌ intentó avisar, pero `No se pudo enviar el correo: faltan los secretos SMTP_USUARIO, SMTP_CONTRASENA o CORREO_DESTINO.` Esta rama nunca se une a `calidad_final`. |
 
-Detalle de esa corrida (sacado de los logs):
+#### Corrida verde anterior: 42737504756 · commit `6edb8ec`
 
 | Etapa | Salida |
 |---|---|
@@ -46,34 +54,45 @@ La rama `demo-rompe-e2e` cambia **solo el código**, no las pruebas. En `web/pan
 | lint | ✅ el código es válido; no hay errores de estilo |
 | pruebas-unitarias | ✅ pasan: las unitarias no prueban el JS de la pantalla |
 | build | ✅ la imagen se construye correctamente |
-| dev | ❌ la integración pasa (34) y las e2e fallan: 2 fallan y 4 pasan |
+| dev | ❌ la integración pasa y las e2e de regresión fallan |
 | prod | ⏭ no corre: dev falla y se detiene el despliegue |
 | correo | ❌ intentó avisar, pero faltan los secretos `SMTP_USUARIO`, `SMTP_CONTRASENA` y `CORREO_DESTINO` |
 
-Detalle de esa corrida (sacado de los logs):
+La integración de dev pasó, pero la suite E2E de regresión detectó problemas en la pantalla:
 
-| Prueba e2e | Salida |
+| Prueba E2E | Resultado |
 |---|---|
-| `test_lista_completa_dentro_del_presupuesto` | ❌ `FAILED`: las tarjetas `#lista > li` existen, pero están ocultas |
-| `test_pie_muestra_version_y_ambiente_del_despliegue` | ✅ `PASSED` |
-| `test_presupuesto_invalido_muestra_error_y_no_lista[0]` | ✅ `PASSED` |
-| `test_presupuesto_invalido_muestra_error_y_no_lista[-50]` | ✅ `PASSED` |
-| `test_presupuesto_insuficiente_avisa_que_no_alcanza` | ❌ `FAILED`: el mensaje `#vacia` existe, pero está oculto |
-| `test_enviar_sin_favoritos_pide_elegir_uno` | ✅ `PASSED` |
+| `test_lista_completa_dentro_del_presupuesto` | ❌ Las tarjetas `#lista > li` existen, pero están ocultas. |
+| `test_pie_muestra_version_y_ambiente_del_despliegue` | ✅ PASSED |
+| `test_presupuesto_invalido_muestra_error_y_no_lista[0]` | ✅ PASSED |
+| `test_presupuesto_invalido_muestra_error_y_no_lista[-50]` | ✅ PASSED |
+| `test_presupuesto_insuficiente_avisa_que_no_alcanza` | ❌ El mensaje `#vacia` existe, pero está oculto. |
+| `test_enviar_sin_favoritos_pide_elegir_uno` | ✅ PASSED |
 
-Resultado final: `2 failed, 4 passed in 13.27s` (Python 3.12.16, Chromium). La versión probada fue `810d14c` (`versión 810d14c · dev`): las pruebas detectaron que la pantalla no muestra los resultados, aunque la API responde bien.
+Resultado: `2 failed, 4 passed in 13.27s` (Python 3.12.16, Chromium). La versión probada fue `810d14c` (`versión 810d14c · dev`). El artefacto `reporte-integracion-dev` contiene `reportes/e2e-dev.xml` y las capturas de los fallos. El enlace de la corrida no está disponible en la evidencia revisada.
 
-Artefacto de la corrida: `reporte-integracion-dev`, que incluye `reportes/e2e-dev.xml` (JUnit XML) y las capturas de lo que falló. Corrida: [COMPLETAR enlace].
+La corrida #15 demuestra que E2E puede detectar un problema que no detectó integración. Es una demostración intencional independiente; no forma parte del pipeline normal de `calidad_final`.
 
-Esta rama no se une a `main` ni a `calidad_final`; se conserva solo para demostrar que las pruebas e2e detectan errores en la capa de presentación.
+### Demo: la integración detecta un error funcional
 
-Por probar en GitHub:
-- [x] Corrida completa en verde (push a `calidad_final`).
-- [ ] Corrida a mano con `suite = smoke`.
-- [x] Una falla a propósito pone el build en rojo y detiene el despliegue (`demo-rompe-unitarias`).
-- [x] Una falla en las pruebas e2e detiene el despliegue (`demo-rompe-e2e`).
-- [ ] El correo de esa falla llega (pendiente: el dueño del repo tiene que agregar los secretos `SMTP_*`; ver README).
-- [ ] En un pull request, prod se salta.
+La corrida #18 corresponde a la rama `demo-rompe-integracion`, commit `c77f931`, y duró 1 min 10 s. El commit parte de `10837c8` (`calidad_final`); su diff cambia únicamente el cálculo de `restante_gtq` en `web/api/main.py`, de `(presupuesto - total) / 100` a `(presupuesto + total) / 100`, sin modificar pruebas.
+
+| Etapa | Resultado |
+|---|---|
+| lint | ✅ exitoso |
+| pruebas unitarias | ✅ exitosas |
+| build | ✅ exitoso |
+| dev | ❌ 59 pruebas de integración recopiladas: 58 pasaron y 1 falló |
+| prod | ⏭ omitido porque dev falló |
+| correo | ❌ falló por falta de `SMTP_USUARIO`, `SMTP_CONTRASENA` y `CORREO_DESTINO` |
+
+La prueba que detectó el error fue `test_restante_es_presupuesto_menos_total`: obtuvo Q522.88 y esperaba Q77.12. E2E no se ejecutó porque falló integración. El fallo del correo es independiente de las pruebas y no afecta la validez de esta demostración.
+
+La corrida #18 demuestra que integración detecta un error funcional que pasó las pruebas unitarias. Es una demostración intencional independiente; no forma parte del pipeline normal de `calidad_final`. [run 43166417928](https://github.com/Nachopacca24/Data_science_final/actions/runs/43166417928)
+
+Esta rama no se une a `main` ni a `calidad_final`; demuestra que las pruebas de integración detectan errores funcionales en la API.
+
+La corrida #17 es el pipeline normal exitoso. Las ramas `demo-rompe-e2e` (#15) y `demo-rompe-integracion` (#18) son demostraciones intencionales de fallos y se mantienen separadas de ese resultado.
 
 ## 2. Verificación local · 2026-11-09
 
@@ -144,3 +163,16 @@ docker run -d --name recomendador-dev -p 8001:8000 -e APP_AMBIENTE=dev recomenda
 python ci/verificar_despliegue.py --url http://localhost:8001 --sha $SHA --ambiente dev
 API_URL=http://localhost:8001 pytest tests/integracion
 ```
+
+## 3. Cierre de entrega: evidencia disponible
+
+La documentación y las referencias locales revisadas no acreditan las siguientes actividades. Los requisitos indicados describen qué evidencia permitiría verificarlas; no implican que ya se hayan realizado.
+
+| Actividad | Estado verificable | Evidencia necesaria para acreditarla |
+|---|---|---|
+| Pull request de `calidad_final` hacia `main` | No acreditado en los documentos ni en las referencias locales revisadas | Enlace al PR que muestre la rama de origen y `main` como destino |
+| Pipeline de ese PR con prod omitido | El workflow configura que prod no corra en eventos `pull_request`; no se identificó una corrida de PR concreta | Enlace a la corrida del PR con el job prod omitido |
+| Merge del PR | No acreditado en los documentos ni en las referencias locales revisadas | Estado de PR que muestre el merge o su commit de merge |
+| Pipeline exitoso en `main` | No se identificó una corrida exitosa en `main` | Enlace a la corrida exitosa en la rama `main` |
+| Tag `entrega-calidad` | No aparece en las etiquetas locales ni en los documentos revisados | Tag y SHA al que apunta |
+| Envío del SHA a MIU | No acreditado en los documentos revisados | Registro del envío y SHA comunicado |
