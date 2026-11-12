@@ -13,6 +13,11 @@ on:
         type: choice
         options: [regresion, smoke]
         default: regresion
+      navegador:
+        description: "Navegador de las pruebas end-to-end"
+        type: choice
+        options: [chromium, firefox, webkit]
+        default: chromium
 
 permissions:
   contents: read
@@ -88,6 +93,7 @@ jobs:
       ambiente: dev
       puerto: 8001
       suite: ${{ inputs.suite || 'regresion' }}
+      navegador: ${{ inputs.navegador || 'chromium' }}
 
   # prod solo después de que dev pasó, y nunca desde un pull request.
   prod:
@@ -98,6 +104,7 @@ jobs:
       ambiente: prod
       puerto: 8002
       suite: smoke
+      navegador: ${{ inputs.navegador || 'chromium' }}
 
   correo:
     needs: [lint, pruebas-unitarias, build, dev, prod]
