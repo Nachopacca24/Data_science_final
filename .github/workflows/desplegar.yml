@@ -1,4 +1,5 @@
-# Despliega la imagen del build en un ambiente, verifica la versión y corre las pruebas de integración.
+# Despliega la imagen del build en un ambiente, verifica la versión y corre las pruebas de integración
+# y las end-to-end contra esa misma instancia.
 # Lo usan los jobs dev y prod de pipeline.yml, así ambos ambientes se despliegan igual.
 name: desplegar
 
@@ -15,6 +16,11 @@ on:
         description: "regresion (todas las pruebas) o smoke (solo lo básico)"
         type: string
         required: true
+      navegador:
+        description: "Navegador de las pruebas end-to-end: chromium, firefox o webkit"
+        type: string
+        required: false
+        default: chromium
 
 permissions:
   contents: read
@@ -61,6 +67,30 @@ jobs:
             *) echo "::error::suite desconocida: ${{ inputs.suite }}"; exit 1 ;;
           esac
           pytest tests/integracion $filtro --junitxml="reportes/integracion-${{ inputs.ambiente }}.xml"
+
+      # El contenedor solo existe en este job, por eso las end-to-end corren aquí, contra la misma instancia.
+      - name: Instalar el navegador de Playwright (${{ inputs.navegador }})
+        timeout-minutes: 5
+        run: |
+          case "${{ inputs.navegador }}" in
+            chromium|firefox|webkit) ;;
+            *) echo "::error::navegador desconocido: ${{ inputs.navegador }}"; exit 1 ;;
+          esac
+          python -m playwright install --with-deps "${{ inputs.navegador }}"
+
+      - name: Pruebas end-to-end (${{ inputs.suite }} en ${{ inputs.navegador }})
+        timeout-minutes: 5
+        run: |
+          case "${{ inputs.suite }}" in
+            smoke)     filtro="-m smoke" ;;
+            regresion) filtro="" ;;
+            *) echo "::error::suite desconocida: ${{ inputs.suite }}"; exit 1 ;;
+          esac
+          export BASE_URL="$API_URL" AMBIENTE="${{ inputs.ambiente }}" SHA_ESPERADO="${{ github.sha }}"
+          echo "URL probada: $BASE_URL | ambiente: $AMBIENTE | navegador: ${{ inputs.navegador }} | suite: ${{ inputs.suite }}"
+          pytest tests/e2e $filtro --browser "${{ inputs.navegador }}" -v \
+            --junitxml="reportes/e2e-${{ inputs.ambiente }}.xml" \
+            --screenshot only-on-failure --output "reportes/e2e-capturas-${{ inputs.ambiente }}"
 
       - name: Logs del contenedor
         if: always()

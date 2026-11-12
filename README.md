@@ -30,7 +30,7 @@ Lo que encontró cada notebook:
 | Notebook | Resultado principal |
 |---|---|
 | 01 · Datos | 44,568 juegos con ≥ 20 reseñas; 52.8 % son "bien recibidos" (> 80 % de reseñas positivas). |
-| 02 · Clasificación | El boosting es el mejor modelo (AUC 0.81 en el examen, contra 0.50 del modelo perezoso). Con los costos del proyecto, el umbral es **0.66** y no 0.5. |
+| 02 · Clasificación | El boosting es el mejor modelo (AUC 0.81 en el examen, contra 0.50 del modelo perezoso). Con los costos del proyecto, el umbral es **0.66** y no 0.5. **Dónde falla:** ordena igual de bien en todos los grupos (AUC 0.79 a 0.82), pero deja fuera a muchos juegos buenos viejos, de Early Access o de simulación, y confía de más en desarrolladores con buena fama. |
 | 03 · Recomendador | La similitud coseno sobre etiquetas y géneros encuentra juegos parecidos a los favoritos. k-Means agrupa los juegos en 5 familias (el silhouette es bajo: las familias se traslapan). |
 | 04 · Causal | Un descuento grande no indica en general un juego peor. Comparado con un descuento pequeño sí sale peor (5.8 puntos menos de % positivo dentro de grupos de antigüedad), pero no se puede decir que el descuento lo cause. |
 | 05 · Decisión | Puntaje = calidad predicha × parecido. La mochila (programación dinámica) elige la mejor combinación dentro del presupuesto; con presupuestos chicos supera por mucho al método codicioso (con Q200: 2.75 contra 1.68). |
@@ -54,9 +54,9 @@ Data_science_final/
 │   ├── 03_recomendador_clusters.ipynb  # similitud coseno + k-Means/PCA
 │   ├── 04_causal.ipynb          # ¿descuento grande = juego peor?
 │   └── 05_decision.ipynb        # lista de compra dentro del presupuesto
-├── data/                        # NO se sube a git (se genera solo)
-│   ├── raw/games.csv
-│   └── processed/juegos.parquet
+├── data/
+│   ├── raw/games.csv            # NO se sube (~400 MB): lo descarga src/datos.py
+│   └── processed/juegos.parquet # SÍ se sube (5.6 MB): el dataset limpio que usan todos los notebooks
 └── outputs/                     # resultados que pasan de un notebook a otro
     ├── pred_calidad.csv         # 02 -> 05: probabilidad de ser bien recibido por juego
     ├── umbral.json              # 02 -> 05: modelo y umbral elegidos
@@ -72,7 +72,9 @@ Data_science_final/
 │   └── Dockerfile               # la imagen que se despliega
 ├── tests/
 │   ├── unitarias/               # sin servidor: validación de entrada, recomendador, catálogo
-│   └── integracion/             # caja negra contra la API desplegada (diseño en CASOS.md)
+│   ├── integracion/             # caja negra contra la API desplegada (diseño en CASOS.md)
+│   └── e2e/                     # recorridos end-to-end con Playwright
+│       └── paginas/             # Page Objects de las pantallas
 ├── ci/verificar_despliegue.py   # ¿la instancia está viva y es el SHA correcto?
 ├── .github/workflows/           # pipeline.yml + desplegar.yml
 ├── DECISIONES.md                # qué se decidió y por qué
@@ -83,7 +85,12 @@ Data_science_final/
 
 ```bash
 pip install -r requirements.txt
-python -m src.datos        # descarga games.csv (~400 MB) y crea data/processed/juegos.parquet
+```
+
+El dataset limpio (`data/processed/juegos.parquet`) ya viene en el repo, así que los notebooks corren sin descargar nada. Para regenerarlo desde cero (descarga `games.csv`, ~400 MB):
+
+```bash
+python -m src.datos
 ```
 
 Después se abren los notebooks en orden (01 → 05) desde la carpeta `notebooks/`; la primera celda ya agrega la raíz del repo al path. El 05 necesita las salidas del 02.
@@ -111,6 +118,18 @@ games.csv ──► src/datos.py ──► juegos.parquet ─┬─► 02 clasif
 4. **Causal (04).** ¿Descuento grande → peor juego? Antigüedad como confusor; comparación dentro de grupos de antigüedad.
 5. **Decisión (05).** Puntaje = calidad predicha × parecido; se elige la mejor combinación dentro del presupuesto (máximo 5 juegos) usando el precio en oferta. Las reseñas reales confirman lo que dice el modelo antes de recomendar o mandar a evitar un juego.
 
+## Plan de despliegue
+
+Cómo llegaría la decisión a un jugador real, y qué de eso ya existe:
+
+1. **Servicio.** Una API web que recibe el presupuesto y los favoritos y devuelve la lista de compra, con una pantalla para buscar juegos. *Ya existe un prototipo* (proyecto de Calidad, rama `calidad_final`, carpeta `web/`): lee un catálogo fijo de 500 juegos generado con estos notebooks y aplica la misma regla del 05.
+2. **Datos de la oferta.** Antes de la oferta de invierno, consultar los precios y descuentos reales en la API pública de la tienda de Steam y reemplazar el plan B (50 % para todos). Es el cambio que más mejora la decisión.
+3. **Reentrenar.** Volver a correr `src/datos.py` y el notebook 02 con la foto más reciente del dataset antes de cada oferta grande. El umbral se vuelve a elegir con los mismos costos.
+4. **Despliegue.** Un solo build por versión (imagen Docker con el SHA del commit), probado en un ambiente de prueba antes de pasar a producción. *Ya existe* en el pipeline de Calidad (GitHub Actions: lint, pruebas unitarias, build, dev y prod).
+5. **Monitoreo.** Después de la oferta, comparar lo recomendado con las reseñas que reciben esos juegos. Si la precision baja de la del examen (0.82), se revisan el modelo y el umbral.
+
+**Lo que falta para usarlo de verdad:** un servidor público (hoy los ambientes viven solo mientras corre el pipeline), los precios reales de diciembre y el catálogo completo en vez de los 500 juegos de la demo.
+
 ## Sistema web y pipeline
 
 La decisión del notebook 05 también está disponible como **API con una pantalla**: eliges tus juegos favoritos y tu presupuesto, y te devuelve qué comprar. Usa `web/catalogo_demo.csv` (500 juegos), así que no necesita el dataset completo. El formato de la API está en [web/CONTRATO_API.md](web/CONTRATO_API.md).
@@ -123,15 +142,49 @@ ruff check .                               # lint
 API_URL=http://localhost:8000 pytest tests/integracion   # integración (con la API corriendo)
 ```
 
+Las pruebas se organizan en tres niveles: las unitarias comprueban unidades individuales de lógica; las de integración verifican componentes y contratos contra la API; y las end-to-end (E2E) recorren la pantalla completa contra la aplicación desplegada o levantada localmente.
+
+Para ejecutar E2E localmente, instala el navegador Chromium de Playwright (además de la dependencia Python instalada con `requirements-dev.txt`):
+
+```bash
+python -m playwright install chromium
+```
+
+Para instalar también Firefox y WebKit, ejecuta:
+
+```bash
+python -m playwright install firefox webkit
+```
+
+En una terminal, levanta la aplicación:
+
+```bash
+uvicorn web.api.main:app --reload
+```
+
+En otra terminal Bash, configura la URL base y ejecuta las pruebas:
+
+```bash
+export BASE_URL=http://localhost:8000
+pytest tests/e2e --base-url "$BASE_URL"
+```
+
+En Windows PowerShell, levanta la aplicación en otra terminal y ejecuta las pruebas así:
+
+```powershell
+$env:BASE_URL="http://localhost:8000"
+pytest tests/e2e --base-url $env:BASE_URL
+```
+
 ### Pipeline (GitHub Actions)
 
-Corre en cada push a `main`, `calidad_final` y a las ramas `demo-rompe-*`, en cada pull request y a mano desde la pestaña *Actions*. A mano se elige `suite`: `regresion` o `smoke`.
+Corre en cada push a `main`, `calidad_final` y a las ramas `demo-rompe-*`, en cada pull request y a mano desde la pestaña *Actions*. A mano se eligen la suite (`regresion` o `smoke`) y el navegador (`chromium`, `firefox` o `webkit`).
 
 ```
 lint ──┐
        ├─► build ──► dev ──► prod          si algo falla ──► correo
-unit ──┘   (1 imagen   (verifica versión   (misma imagen,
-            con el SHA)  + regresión)        verifica versión + smoke)
+unit ──┘   (1 imagen   (suite elegida:     (misma imagen,
+            con el SHA)  integración + E2E)  integración + E2E smoke)
 ```
 
 | Etapa | Qué hace | Tiempo máximo |
@@ -139,9 +192,14 @@ unit ──┘   (1 imagen   (verifica versión   (misma imagen,
 | `lint` | `ruff check` | 5 min |
 | `pruebas-unitarias` | `pytest tests/unitarias` | 5 min |
 | `build` | construye **una sola** imagen Docker con el SHA adentro y la guarda como artefacto | 10 min |
-| `dev` | carga esa imagen, la levanta con `APP_AMBIENTE=dev`, verifica que `/version` sea el SHA y corre la suite elegida | 10 min |
-| `prod` | la **misma** imagen con `APP_AMBIENTE=prod`, verifica la versión y corre smoke. No corre en pull requests | 10 min |
+| `dev` | carga esa imagen, la levanta con `APP_AMBIENTE=dev`, verifica que `/version` sea el SHA y corre integración y E2E con la suite elegida | 10 min |
+| `prod` | la **misma** imagen con `APP_AMBIENTE=prod`, verifica la versión y corre integración y E2E smoke. No corre en pull requests | 10 min |
 | `correo` | si una etapa falla o se pasa de tiempo, envía un correo con rama, SHA, autor, resultado de cada etapa y el enlace a los logs | 5 min |
+
+| Ambiente | Integración | E2E |
+|---|---|---|
+| Dev | Suite seleccionada | Suite seleccionada |
+| Prod | Smoke | Smoke |
 
 **Para que llegue el correo**, el dueño del repo debe agregar estos secretos en *Settings → Secrets and variables → Actions*:
 
@@ -152,6 +210,8 @@ unit ──┘   (1 imagen   (verifica versión   (misma imagen,
 | `CORREO_DESTINO` | a quién le llega; varios separados por coma |
 
 Si faltan, la etapa `correo` falla con un mensaje que lo dice: así no se pierde una falla sin que nadie se entere.
+
+La suite seleccionada se aplica tanto a integración como a E2E en dev. Por defecto, dev ejecuta las 6 E2E de regresión; si se selecciona smoke, corre las 2 E2E smoke. Dev permite elegir navegador; prod siempre ejecuta smoke (3 pruebas de integración y 2 E2E) y depende del éxito de dev. Las E2E corren contra el ambiente desplegado: primero integración y luego E2E; si integración falla en dev, E2E no corre allí, y si dev falla, prod se omite. Cada registro E2E identifica la URL probada, el ambiente, el navegador y la suite. La misma imagen de Docker construida al inicio se reutiliza en dev y prod.
 
 Por qué se decidió así: [DECISIONES.md](DECISIONES.md). Qué se corrió y qué salió: [EVIDENCIA.md](EVIDENCIA.md).
 
@@ -169,6 +229,10 @@ Por qué se decidió así: [DECISIONES.md](DECISIONES.md). Qué se corrió y qu�
 - Se usa `games.csv`: el parquet de Hugging Face trae las **etiquetas vacías**. El encabezado del CSV está corrido una columna (`"DiscountDLC count"`) y `datos.py` lo corrige.
 - `Price` es el precio **con** el descuento del día de la foto; `precio_lista_usd` lo revierte.
 - No hay historial de precios ni datos de la oferta de diciembre → **plan B**: precio en oferta = precio de lista × (1 − `DESCUENTO_TIPICO`).
+
+## Uso de IA
+
+Lo que se le pidió a la IA, lo que se aceptó o se rechazó y cómo se verificó está en [BITACORA_AI.md](BITACORA_AI.md).
 
 ## División
 
