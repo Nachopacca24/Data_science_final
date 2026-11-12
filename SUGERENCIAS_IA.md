@@ -6,6 +6,7 @@ Sugerencias que hizo un asistente de IA durante el proyecto, qué se hizo con ca
 |---|---|---|
 | IA-1 a IA-3 | Mati | Claude (Claude Code) |
 | IA-4 | Fabiola | Claude (Claude Code) |
+| IA-5 a IA-7 | JuanDa | Claude (chat) |
 
 ## IA-1 · La mochila en centavos, no en quetzales redondeados (Mati)
 
@@ -45,8 +46,44 @@ Sugerencias que hizo un asistente de IA durante el proyecto, qué se hizo con ca
 
 **Comprobación.** Con la misma corrida parcial, la cobertura baja a 32 % y pytest termina con exit 1. Con todas las pruebas sale 100 % y pasa.
 
+## IA-5 · Las e2e corren dentro de `desplegar.yml`, no en un job aparte (JuanDa)
+
+**Sugerencia.** La primera propuesta de la IA fue un job `e2e` nuevo al final de `pipeline.yml`. Al leer `desplegar.yml`, la IA corrigió: el contenedor existe solo dentro del job `desplegar` (DECISIONES C4), así que otro job no podría alcanzar esa instancia sin desplegar una segunda. Propuso dos pasos nuevos en ese job, después de integración, y pasar el parámetro `navegador` desde `pipeline.yml`.
+
+**Decisión.** Se aceptó (DECISIONES E5).
+
+**Comprobación.**
+- Los dos workflows siguen siendo YAML válido y el cambio es de 36 líneas añadidas y 1 reemplazada (el comentario de cabecera de `desplegar.yml`); no se modificó ninguna etapa existente.
+- El log de la etapa imprime la URL probada, el ambiente, el navegador y la suite (corrida `[completar]`).
+- Al romper una e2e a propósito (rama `demo-rompe-e2e`), `dev` queda en rojo, `prod` no corre y llega el correo (corrida `[completar]`).
+
+## IA-6 · Probar el presupuesto inválido sin escribir texto (JuanDa)
+
+**Sugerencia.** La IA propuso primero probar un presupuesto `"abc"`. Al revisar `recomendaciones.html`, vio que el campo es `type="number"`, donde Playwright no permite escribir texto, y que el JS valida `presupuesto > 0` antes de llamar a la API. Propuso probar solo `0` y `-50` en la pantalla y dejar los tipos inválidos a la capa de integración (DECISIONES A7). También cambió el caso "no alcanza" de Q1 a Q0.01, porque VL-02 de `CASOS.md` ya documenta que con ese presupuesto la lista queda vacía.
+
+**Decisión.** Se aceptó (DECISIONES E6).
+
+**Comprobación.**
+- `test_presupuesto_invalido_muestra_error_y_no_lista[0]` y `[-50]`.
+- `test_presupuesto_insuficiente_avisa_que_no_alcanza` (Q0.01, lista vacía, restante Q0.01).
+- Corrida `[completar]`.
+
+## IA-7 · El marcador `smoke` en el `conftest.py` de e2e, no en `pyproject.toml` (JuanDa)
+
+**Sugerencia.** Para que `-m smoke` funcione en las e2e hacía falta registrar el marcador. La IA propuso hacerlo en `tests/e2e/conftest.py` y no editar `pyproject.toml`, que es compartido y donde viven la cobertura y el lint de los demás (misma idea que IA-3).
+
+**Decisión.** Se aceptó.
+
+**Comprobación.**
+- `pyproject.toml` no aparece en el diff de ningún commit de JuanDa.
+- `pytest tests/e2e -m smoke --collect-only` recoge 2 pruebas y deselecciona 4.
+- Con `suite: smoke`, la etapa e2e de `prod` corre solo esas 2 (corrida `[completar]`).
+
 ## Lo que la IA hizo mal y se corrigió
 
 Para que conste que las sugerencias se revisaron y no se aceptaron a ciegas:
 - La primera versión de la pantalla dejaba la lista anterior visible al lado de un mensaje de error. Se encontró al probar la pantalla en el navegador y se corrigió: ahora la lista se oculta.
 - La primera versión de la API no arrancaba: el formato de `responses` estaba mal. Se encontró al levantarla y se corrigió antes del primer commit.
+- La primera propuesta de las e2e las ponía en un job aparte de `pipeline.yml`, que no habría alcanzado la instancia desplegada. Se corrigió al leer `desplegar.yml` (IA-5).
+- El primer parche de los workflows convirtió sus finales de línea de CRLF a LF, y Git habría marcado todas las líneas como cambiadas. Se detectó al revisar el diff y se rehízo para que solo cambien las líneas nuevas.
+- Las pruebas e2e se escribieron sin poder abrir un navegador, así que la IA no pudo comprobarlas. Se corrieron en local antes del primer commit.
