@@ -18,6 +18,16 @@ on:
         type: choice
         options: [chromium, firefox, webkit]
         default: chromium
+      ambiente:
+        description: "Ambiente donde ejecutar el pipeline"
+        type: choice
+        options: [dev, prod]
+        default: dev
+        required: true
+      destinatario:
+        description: "Correo del destinatario de la notificación"
+        type: string
+        required: true
 
 permissions:
   contents: read
@@ -88,6 +98,7 @@ jobs:
 
   dev:
     needs: build
+    if: github.event_name != 'workflow_dispatch' || inputs.ambiente == 'dev'
     uses: ./.github/workflows/desplegar.yml
     with:
       ambiente: dev
@@ -97,8 +108,10 @@ jobs:
 
   # prod solo después de que dev pasó, y nunca desde un pull request.
   prod:
-    needs: dev
-    if: github.event_name != 'pull_request'
+    needs: build
+    if: |
+      github.event_name != 'pull_request' &&
+      (github.event_name != 'workflow_dispatch' || inputs.ambiente == 'prod')
     uses: ./.github/workflows/desplegar.yml
     with:
       ambiente: prod
@@ -114,12 +127,12 @@ jobs:
     env:
       SMTP_USUARIO: ${{ secrets.SMTP_USUARIO }}
       SMTP_CONTRASENA: ${{ secrets.SMTP_CONTRASENA }}
-      CORREO_DESTINO: ${{ secrets.CORREO_DESTINO }}
+      CORREO_DESTINO: ${{ inputs.destinatario || secrets.CORREO_DESTINO }}
     steps:
       - name: Avisar si faltan los secretos del correo
         if: env.SMTP_USUARIO == '' || env.SMTP_CONTRASENA == '' || env.CORREO_DESTINO == ''
         run: |
-          echo "::error::No se pudo enviar el correo: faltan los secretos SMTP_USUARIO, SMTP_CONTRASENA o CORREO_DESTINO."
+          echo "::error::No se pudo enviar el correo: faltan los secretos SMTP_USUARIO, SMTP_CONTRASENA o el destinatario."
           exit 1
       - uses: dawidd6/action-send-mail@v22
         with:
