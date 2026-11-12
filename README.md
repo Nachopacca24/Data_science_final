@@ -72,7 +72,9 @@ Data_science_final/
 │   └── Dockerfile               # la imagen que se despliega
 ├── tests/
 │   ├── unitarias/               # sin servidor: validación de entrada, recomendador, catálogo
-│   └── integracion/             # caja negra contra la API desplegada (diseño en CASOS.md)
+│   ├── integracion/             # caja negra contra la API desplegada (diseño en CASOS.md)
+│   └── e2e/                     # recorridos end-to-end con Playwright
+│       └── paginas/             # Page Objects de las pantallas
 ├── ci/verificar_despliegue.py   # ¿la instancia está viva y es el SHA correcto?
 ├── .github/workflows/           # pipeline.yml + desplegar.yml
 ├── DECISIONES.md                # qué se decidió y por qué
@@ -140,15 +142,49 @@ ruff check .                               # lint
 API_URL=http://localhost:8000 pytest tests/integracion   # integración (con la API corriendo)
 ```
 
+Las pruebas se organizan en tres niveles: las unitarias comprueban unidades individuales de lógica; las de integración verifican componentes y contratos contra la API; y las end-to-end (E2E) recorren la pantalla completa contra la aplicación desplegada o levantada localmente.
+
+Para ejecutar E2E localmente, instala el navegador Chromium de Playwright (además de la dependencia Python instalada con `requirements-dev.txt`):
+
+```bash
+python -m playwright install chromium
+```
+
+Para instalar también Firefox y WebKit, ejecuta:
+
+```bash
+python -m playwright install firefox webkit
+```
+
+En una terminal, levanta la aplicación:
+
+```bash
+uvicorn web.api.main:app --reload
+```
+
+En otra terminal Bash, configura la URL base y ejecuta las pruebas:
+
+```bash
+export BASE_URL=http://localhost:8000
+pytest tests/e2e --base-url "$BASE_URL"
+```
+
+En Windows PowerShell, levanta la aplicación en otra terminal y ejecuta las pruebas así:
+
+```powershell
+$env:BASE_URL="http://localhost:8000"
+pytest tests/e2e --base-url $env:BASE_URL
+```
+
 ### Pipeline (GitHub Actions)
 
-Corre en cada push a `main`, `calidad_final` y a las ramas `demo-rompe-*`, en cada pull request y a mano desde la pestaña *Actions*. A mano se elige `suite`: `regresion` o `smoke`.
+Corre en cada push a `main`, `calidad_final` y a las ramas `demo-rompe-*`, en cada pull request y a mano desde la pestaña *Actions*. A mano se eligen la suite (`regresion` o `smoke`) y el navegador (`chromium`, `firefox` o `webkit`).
 
 ```
 lint ──┐
        ├─► build ──► dev ──► prod          si algo falla ──► correo
-unit ──┘   (1 imagen   (verifica versión   (misma imagen,
-            con el SHA)  + regresión)        verifica versión + smoke)
+unit ──┘   (1 imagen   (suite elegida:     (misma imagen,
+            con el SHA)  integración + E2E)  integración + E2E smoke)
 ```
 
 | Etapa | Qué hace | Tiempo máximo |
@@ -156,9 +192,14 @@ unit ──┘   (1 imagen   (verifica versión   (misma imagen,
 | `lint` | `ruff check` | 5 min |
 | `pruebas-unitarias` | `pytest tests/unitarias` | 5 min |
 | `build` | construye **una sola** imagen Docker con el SHA adentro y la guarda como artefacto | 10 min |
-| `dev` | carga esa imagen, la levanta con `APP_AMBIENTE=dev`, verifica que `/version` sea el SHA y corre la suite elegida | 10 min |
-| `prod` | la **misma** imagen con `APP_AMBIENTE=prod`, verifica la versión y corre smoke. No corre en pull requests | 10 min |
+| `dev` | carga esa imagen, la levanta con `APP_AMBIENTE=dev`, verifica que `/version` sea el SHA y corre integración y E2E con la suite elegida | 10 min |
+| `prod` | la **misma** imagen con `APP_AMBIENTE=prod`, verifica la versión y corre integración y E2E smoke. No corre en pull requests | 10 min |
 | `correo` | si una etapa falla o se pasa de tiempo, envía un correo con rama, SHA, autor, resultado de cada etapa y el enlace a los logs | 5 min |
+
+| Ambiente | Integración | E2E |
+|---|---|---|
+| Dev | Suite seleccionada | Suite seleccionada |
+| Prod | Smoke | Smoke |
 
 **Para que llegue el correo**, el dueño del repo debe agregar estos secretos en *Settings → Secrets and variables → Actions*:
 
@@ -169,6 +210,8 @@ unit ──┘   (1 imagen   (verifica versión   (misma imagen,
 | `CORREO_DESTINO` | a quién le llega; varios separados por coma |
 
 Si faltan, la etapa `correo` falla con un mensaje que lo dice: así no se pierde una falla sin que nadie se entere.
+
+La suite seleccionada se aplica tanto a integración como a E2E en dev. Por defecto, dev ejecuta las 6 E2E de regresión; si se selecciona smoke, corre las 2 E2E smoke. Dev permite elegir navegador; prod siempre ejecuta smoke (3 pruebas de integración y 2 E2E) y depende del éxito de dev. Las E2E corren contra el ambiente desplegado: primero integración y luego E2E; si integración falla en dev, E2E no corre allí, y si dev falla, prod se omite. Cada registro E2E identifica la URL probada, el ambiente, el navegador y la suite. La misma imagen de Docker construida al inicio se reutiliza en dev y prod.
 
 Por qué se decidió así: [DECISIONES.md](DECISIONES.md). Qué se corrió y qué salió: [EVIDENCIA.md](EVIDENCIA.md).
 

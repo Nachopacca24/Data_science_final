@@ -147,4 +147,4 @@ Antes, con el contrato provisional: aceptar un presupuesto negativo hacía falla
 - **smoke**: `GET /salud`, `GET /version` y PE-01. Es rápida y responde "¿la API está viva y responde lo básico?".
 - **regresión**: todos los casos (59).
 
-Se elige con `pytest -m smoke` o sin filtro (regresión). En el pipeline es el parámetro `suite`: dev corre regresión y prod corre smoke.
+Se elige con `pytest -m smoke` o sin filtro (regresión). En el pipeline, dev corre regresión por defecto y permite elegir smoke en el flujo manual; prod corre smoke.
