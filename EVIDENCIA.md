@@ -11,6 +11,7 @@ Se agregan aquí a medida que corren. Pestaña *Actions* del repo, workflow `pip
 | 2026-11-10 01:40 UTC | `calidad_final` · `6edb8ec` | ✅ 19 s | ✅ 15 s | ✅ 19 s | ✅ 25 s | ✅ 20 s | — (no hubo falla) | [run 42737504756](https://github.com/Nachopacca24/Data_science_final/actions/runs/42737504756) |
 | 2026-11-10 | `calidad_final` · `f8952fb`¹ | ✅ 14 s | ✅ 17 s | ✅ 19 s | ✅ 23 s | ✅ 25 s | — (no hubo falla) | [run 42741136300](https://github.com/Nachopacca24/Data_science_final/actions/runs/42741136300) |
 | 2026-11-10 | `demo-rompe-unitarias` · `d1b4dc4` | ✅ 18 s | ❌ 24 s | ⏭ no corre | ⏭ no corre | ⏭ no corre | ❌ faltan secretos | [run 42741165796](https://github.com/Nachopacca24/Data_science_final/actions/runs/42741165796) |
+| 2026-11-11 | `demo-rompe-e2e` · `810d14c` | ✅ COMPLETAR s | ✅ COMPLETAR s | ✅ COMPLETAR s | ❌ e2e COMPLETAR s | ⏭ no corre | ❌ faltan secretos | [run COMPLETAR](COMPLETAR enlace) |
 
 ¹ Después de esa corrida se le cambió el título a ese commit. El contenido es idéntico, pero ahora es `8dbd20d`, "docs(ia): documenta sugerencias de IA (mías)".
 
@@ -36,10 +37,41 @@ Detalle de esa corrida (sacado de los logs):
 
 Artefactos de la corrida: `imagen-<sha>`, `reporte-unitarias`, `reporte-integracion-dev` y `reporte-integracion-prod` (JUnit XML).
 
+### Demo: el código se rompe y las pruebas e2e detectan el error
+
+La rama `demo-rompe-e2e` cambia **solo el código**, no las pruebas. En `web/pantallas/recomendaciones.js`, `$("resultado").hidden = false` pasa a `$("resultado").hidden = true`: después de recibir la respuesta de la API, la pantalla oculta toda la sección de resultados aunque la respuesta sea correcta. Se lanzó con los valores por defecto (suite regresión, navegador chromium).
+
+| Etapa | Resultado |
+|---|---|
+| lint | ✅ el código es válido; no hay errores de estilo |
+| pruebas-unitarias | ✅ pasan: las unitarias no prueban el JS de la pantalla |
+| build | ✅ la imagen se construye correctamente |
+| dev | ❌ la integración pasa (34) y las e2e fallan: 2 fallan y 4 pasan |
+| prod | ⏭ no corre: dev falla y se detiene el despliegue |
+| correo | ❌ intentó avisar, pero faltan los secretos `SMTP_USUARIO`, `SMTP_CONTRASENA` y `CORREO_DESTINO` |
+
+Detalle de esa corrida (sacado de los logs):
+
+| Prueba e2e | Salida |
+|---|---|
+| `test_lista_completa_dentro_del_presupuesto` | ❌ `FAILED`: las tarjetas `#lista > li` existen, pero están ocultas |
+| `test_pie_muestra_version_y_ambiente_del_despliegue` | ✅ `PASSED` |
+| `test_presupuesto_invalido_muestra_error_y_no_lista[0]` | ✅ `PASSED` |
+| `test_presupuesto_invalido_muestra_error_y_no_lista[-50]` | ✅ `PASSED` |
+| `test_presupuesto_insuficiente_avisa_que_no_alcanza` | ❌ `FAILED`: el mensaje `#vacia` existe, pero está oculto |
+| `test_enviar_sin_favoritos_pide_elegir_uno` | ✅ `PASSED` |
+
+Resultado final: `2 failed, 4 passed in 13.27s` (Python 3.12.16, Chromium). La versión probada fue `810d14c` (`versión 810d14c · dev`): las pruebas detectaron que la pantalla no muestra los resultados, aunque la API responde bien.
+
+Artefacto de la corrida: `reporte-integracion-dev`, que incluye `reportes/e2e-dev.xml` (JUnit XML) y las capturas de lo que falló. Corrida: [COMPLETAR enlace].
+
+Esta rama no se une a `main` ni a `calidad_final`; se conserva solo para demostrar que las pruebas e2e detectan errores en la capa de presentación.
+
 Por probar en GitHub:
 - [x] Corrida completa en verde (push a `calidad_final`).
 - [ ] Corrida a mano con `suite = smoke`.
 - [x] Una falla a propósito pone el build en rojo y detiene el despliegue (`demo-rompe-unitarias`).
+- [x] Una falla en las pruebas e2e detiene el despliegue (`demo-rompe-e2e`).
 - [ ] El correo de esa falla llega (pendiente: el dueño del repo tiene que agregar los secretos `SMTP_*`; ver README).
 - [ ] En un pull request, prod se salta.
 
