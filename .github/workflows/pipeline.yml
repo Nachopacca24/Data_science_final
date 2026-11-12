@@ -1,3 +1,4 @@
+
 # Pipeline: lint -> pruebas unitarias -> build único (imagen con el SHA) -> dev -> prod.
 # Si algo falla o se pasa de tiempo, se envía un correo con los datos del build.
 name: pipeline
@@ -108,10 +109,12 @@ jobs:
 
   # prod solo después de que dev pasó, y nunca desde un pull request.
   prod:
-    needs: build
+    needs: [build, dev]
     if: |
+      always() && needs.build.result == 'success' &&
       github.event_name != 'pull_request' &&
-      (github.event_name != 'workflow_dispatch' || inputs.ambiente == 'prod')
+      (needs.dev.result == 'success' ||
+       (github.event_name == 'workflow_dispatch' && inputs.ambiente == 'prod'))
     uses: ./.github/workflows/desplegar.yml
     with:
       ambiente: prod
