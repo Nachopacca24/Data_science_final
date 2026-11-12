@@ -102,7 +102,7 @@ $("formulario").addEventListener("submit", async (ev) => {
     $("vacia").hidden = r.juegos.length > 0;
     $("r-total").textContent = quetzales(r.total_gtq);
     $("r-restante").textContent = quetzales(r.restante_gtq);
-    $("resultado").hidden = false;
+    $("resultado").hidden = true; // CAMBIO INTENCIONAL PARA LA DEMOSTRACIÓN E2E
   } catch (e) {
     mostrarError(e.message);
   } finally {
