@@ -12,9 +12,9 @@ Capturas: carpeta [evidencia/](evidencia/)
 | Qué se pide | Build | Commit | Resultado | Capturas |
 |---|---|---|---|---|
 | Build verde | #19 | b59c469 | Todas las etapas en verde, 2 min 17 s | [01](evidencia/01-verde-run19-b59c469.png), [01b](evidencia/01b-verde-run19-b59c469-etapas.jpeg) |
-| Build rojo, detenido por la puerta de cobertura | (por llenar) | (por llenar) | pruebas-unitarias en rojo: las pruebas pasan, pero la cobertura baja a 81.82 % y no llega al 90 %. build, dev y prod no corren | (por llenar: 07, 07b log, 07c correo) |
-| Build verde otra vez | (por llenar) | (por llenar) | 108 pruebas unitarias, cobertura 100 %, todo en verde | (por llenar: 08) |
-| Build en el ambiente dev, lanzado a mano | (por llenar) | (por llenar) | ambiente=dev: corre dev y no corre prod | (por llenar: 09) |
+| Build rojo, detenido por la puerta de cobertura | [#24](https://github.com/Nachopacca24/Data_science_final/actions/runs/43290789727) | 54cfc56 | pruebas-unitarias en rojo: las pruebas pasan, pero la cobertura baja a 81.82 % y no llega al 90 %. build, dev y prod no corren | (por llenar: 07, 07b log, 07c correo) |
+| Build verde otra vez | [#25](https://github.com/Nachopacca24/Data_science_final/actions/runs/43291759699) | 71a118a | 108 pruebas unitarias, cobertura 100 %, todo en verde | (por llenar: 08) |
+| Build en el ambiente dev, lanzado a mano | [#27](https://github.com/Nachopacca24/Data_science_final/actions/runs/43292296370) | 0c14655 | ambiente=dev: corre dev y no corre prod | (por llenar: 09) |
 | Build en el ambiente prod, lanzado a mano | (por llenar) | (por llenar) | ambiente=prod: corre prod y no corre dev | (por llenar: 10) |
 | Parámetro que cambia qué pruebas corren | #20 | b59c469 | Lanzado a mano con suite=smoke: en dev corren 3 pruebas de integración y se saltan 56 | [06](evidencia/06-manual-smoke-run20-b59c469.jpeg), [06b](evidencia/06b-manual-smoke-run20-b59c469-dev-log.jpeg) |
 | Correo al fallar | #18 (intento 2) | c77f931 | Llegó con número de build, rama, commit, autor, resultado por etapa y enlace al log | [02b](evidencia/02b-correo-run18-c77f931.jpeg), [05](evidencia/05-rojo-integracion-run-correo18-c77f931.png) |
@@ -25,7 +25,7 @@ Todos los commits de esta tabla, menos el del correo (rama demo), están en el h
 
 | Capa | Pruebas | Dónde | Cómo corren |
 |---|---|---|---|
-| Unitarias | 98 (108 cuando entren las pruebas del resumen) | tests/unitarias/ | Sin servidor, antes del build, con la puerta de cobertura (90 % de ramas sobre recomendador.py, catalogo.py y esquemas.py; con resumen.py cuando entre) |
+| Unitarias | 108 | tests/unitarias/ | Sin servidor, antes del build, con la puerta de cobertura (90 % de ramas sobre recomendador.py, catalogo.py, esquemas.py y resumen.py) |
 | Integración | 59 (3 de smoke) | tests/integracion/ | Caja negra contra la API desplegada. dev corre la suite que se escoja; prod corre smoke |
 | End-to-end | 6 (2 de smoke) | tests/e2e/ | Playwright con page objects contra la pantalla desplegada, en el navegador que se escoja |
 
@@ -43,9 +43,10 @@ Todos los commits de esta tabla, menos el del correo (rama demo), están en el h
 | #21 | 2026-11-12 | calidad_final · b59c469 | a mano | ✅ | ✅ | ✅ | ✅ | ✅ | no hubo falla | [run](https://github.com/Nachopacca24/Data_science_final/actions/runs/43281797875) |
 | #22 | 2026-11-12 | calidad_final · c805511 | push | ✅ | ✅ | ✅ | ✅ | ✅ | no hubo falla | [run](https://github.com/Nachopacca24/Data_science_final/actions/runs/43284323145) |
 | #23 | 2026-11-12 | calidad_final · e4e791f | push | ✅ | ✅ | ✅ | ✅ | ✅ | no hubo falla | [run](https://github.com/Nachopacca24/Data_science_final/actions/runs/43289503901) |
-| (por llenar) | | calidad_final · (resumen sin pruebas) | push | ✅ | ❌ cobertura 81.82 % | no corre | no corre | no corre | (por llenar) | |
-| (por llenar) | | calidad_final · (pruebas del resumen) | push | ✅ | ✅ 108, 100 % | ✅ | ✅ | ✅ | no hubo falla | |
-| (por llenar) | | calidad_final | a mano, ambiente=dev | | | | | no corre | | |
+| #24 | 2026-11-12 | calidad_final · 54cfc56 | push | ✅ | ❌ cobertura 81.82 % | no corre | no corre | no corre | ✅ enviado | [run](https://github.com/Nachopacca24/Data_science_final/actions/runs/43290789727) |
+| #25 | 2026-11-12 | calidad_final · 71a118a | push | ✅ | ✅ 108, 100 % | ✅ | ✅ | ✅ | no hubo falla | [run](https://github.com/Nachopacca24/Data_science_final/actions/runs/43291759699) |
+| #26 | 2026-11-12 | calidad_final · 0c14655 | push | ✅ | ✅ | ✅ | ✅ | ✅ | no hubo falla | [run](https://github.com/Nachopacca24/Data_science_final/actions/runs/43292136778) |
+| #27 | 2026-11-12 | calidad_final · 0c14655 | a mano, ambiente=dev | ✅ | ✅ | ✅ | ✅ | no corre | no hubo falla | [run](https://github.com/Nachopacca24/Data_science_final/actions/runs/43292296370) |
 | (por llenar) | | calidad_final | a mano, ambiente=prod | | | | no corre | | | |
 
 En los builds #15 y #18 el primer intento no mandó correo porque faltaban los secretos SMTP_USUARIO, SMTP_CONTRASENA y CORREO_DESTINO. Se agregaron y se volvieron a correr; en el intento 2 el correo llegó.
@@ -91,7 +92,7 @@ Cambio: en web/pantallas/recomendaciones.js, la sección de resultados queda ocu
 
 Capturas: [03](evidencia/03-rojo-e2e-run15-810d14c.png), [03b](evidencia/03b-rojo-e2e-run15-810d14c-log.jpeg)
 
-### Cobertura: build (por llenar)
+### Cobertura: build #24
 
 Cambio: se agrega web/api/resumen.py (resumen de la lista de compra: total, cuánto sobra, porcentaje usado, el juego más caro, la etiqueta más común y si el presupuesto quedó ajustado u holgado) sin pruebas.
 
@@ -100,11 +101,11 @@ Cambio: se agrega web/api/resumen.py (resumen de la lista de compra: total, cuá
 | lint | ✅ |
 | pruebas-unitarias | ❌ las 98 pruebas pasan, pero "FAIL Required test coverage of 90.0% not reached. Total coverage: 81.82%". resumen.py queda en 0 % |
 | build, dev, prod | no corren |
-| correo | (por llenar) |
+| correo | ✅ enviado |
 
-En el commit siguiente se agregan 10 pruebas para resumen.py y el build vuelve a verde con 100 %.
+En el commit siguiente (71a118a, build #25) se agregan 10 pruebas para resumen.py y el build vuelve a verde con 100 %.
 
-Capturas: (por llenar)
+Capturas: (por llenar: 07, 07b log, 07c correo, 08)
 
 ## 5. Ambientes y versión
 
@@ -115,7 +116,7 @@ Los dos ambientes son dos contenedores de la misma imagen, construida una sola v
 | dev | OK: http://localhost:8001 responde version=6edb8ec5fd2022bf90eda0ea0d7cf0dfaee3caf6 ambiente=dev |
 | prod | OK: http://localhost:8002 responde version=6edb8ec5fd2022bf90eda0ea0d7cf0dfaee3caf6 ambiente=prod |
 
-Builds lanzados a mano por ambiente: (por llenar, capturas 09 y 10)
+Builds lanzados a mano por ambiente: dev en el build [#27](https://github.com/Nachopacca24/Data_science_final/actions/runs/43292296370) y prod en el build (por llenar). Capturas 09 y 10 (por llenar).
 
 ## 6. Verificación local · 2026-11-09
 
