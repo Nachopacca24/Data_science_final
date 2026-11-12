@@ -13,6 +13,21 @@ on:
         type: choice
         options: [regresion, smoke]
         default: regresion
+      navegador:
+        description: "Navegador de las pruebas end-to-end"
+        type: choice
+        options: [chromium, firefox, webkit]
+        default: chromium
+      ambiente:
+        description: "Ambiente donde ejecutar el pipeline"
+        type: choice
+        options: [dev, prod]
+        default: dev
+        required: true
+      destinatario:
+        description: "Correo del destinatario de la notificación"
+        type: string
+        required: true
 
 permissions:
   contents: read
@@ -46,7 +61,16 @@ jobs:
           cache: pip
           cache-dependency-path: web/requirements-dev.txt
       - run: pip install -r web/requirements-dev.txt
-      - run: pytest tests/unitarias --junitxml=reportes/unitarias.xml
+      # Puerta de cobertura: si los módulos de negocio bajan del umbral (pyproject.toml), el build se detiene aquí.
+      - name: Pruebas unitarias y puerta de cobertura
+        run: >
+          pytest tests/unitarias --junitxml=reportes/unitarias.xml
+          --cov --cov-report=term-missing --cov-report=xml:reportes/cobertura.xml
+      - name: Cobertura en el resumen del build
+        if: always()
+        run: |
+          echo "### Cobertura de los módulos de negocio" >> "$GITHUB_STEP_SUMMARY"
+          coverage report --format=markdown >> "$GITHUB_STEP_SUMMARY" || true
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -74,21 +98,26 @@ jobs:
 
   dev:
     needs: build
+    if: github.event_name != 'workflow_dispatch' || inputs.ambiente == 'dev'
     uses: ./.github/workflows/desplegar.yml
     with:
       ambiente: dev
       puerto: 8001
       suite: ${{ inputs.suite || 'regresion' }}
+      navegador: ${{ inputs.navegador || 'chromium' }}
 
   # prod solo después de que dev pasó, y nunca desde un pull request.
   prod:
-    needs: dev
-    if: github.event_name != 'pull_request'
+    needs: build
+    if: |
+      github.event_name != 'pull_request' &&
+      (github.event_name != 'workflow_dispatch' || inputs.ambiente == 'prod')
     uses: ./.github/workflows/desplegar.yml
     with:
       ambiente: prod
       puerto: 8002
       suite: smoke
+      navegador: ${{ inputs.navegador || 'chromium' }}
 
   correo:
     needs: [lint, pruebas-unitarias, build, dev, prod]
@@ -98,12 +127,12 @@ jobs:
     env:
       SMTP_USUARIO: ${{ secrets.SMTP_USUARIO }}
       SMTP_CONTRASENA: ${{ secrets.SMTP_CONTRASENA }}
-      CORREO_DESTINO: ${{ secrets.CORREO_DESTINO }}
+      CORREO_DESTINO: ${{ inputs.destinatario || secrets.CORREO_DESTINO }}
     steps:
       - name: Avisar si faltan los secretos del correo
         if: env.SMTP_USUARIO == '' || env.SMTP_CONTRASENA == '' || env.CORREO_DESTINO == ''
         run: |
-          echo "::error::No se pudo enviar el correo: faltan los secretos SMTP_USUARIO, SMTP_CONTRASENA o CORREO_DESTINO."
+          echo "::error::No se pudo enviar el correo: faltan los secretos SMTP_USUARIO, SMTP_CONTRASENA o el destinatario."
           exit 1
       - uses: dawidd6/action-send-mail@v22
         with:
