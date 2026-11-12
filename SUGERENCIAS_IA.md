@@ -6,7 +6,7 @@ Sugerencias que hizo un asistente de IA durante el proyecto, qué se hizo con ca
 |---|---|---|
 | IA-1 a IA-3 | Mati | Claude (Claude Code) |
 | IA-4 | Fabiola | Claude (Claude Code) |
-| IA-5 a IA-7 | JuanDa | Claude (chat) |
+| IA-5 e IA-6 | JuanDa | Claude (chat) |
 
 ## IA-1 · La mochila en centavos, no en quetzales redondeados (Mati)
 
@@ -53,9 +53,9 @@ Sugerencias que hizo un asistente de IA durante el proyecto, qué se hizo con ca
 **Decisión.** Se aceptó (DECISIONES E5).
 
 **Comprobación.**
-- Los dos workflows siguen siendo YAML válido y el cambio es de 36 líneas añadidas y 1 reemplazada (el comentario de cabecera de `desplegar.yml`); no se modificó ninguna etapa existente.
-- El log de la etapa imprime la URL probada, el ambiente, el navegador y la suite (corrida `[completar]`).
-- Al romper una e2e a propósito (rama `demo-rompe-e2e`), `dev` queda en rojo, `prod` no corre y llega el correo (corrida `[completar]`).
+- `pipeline.yml` pasa a `desplegar.yml` la suite y el navegador; después de integración, `desplegar.yml` instala el navegador seleccionado y ejecuta E2E contra la misma instancia desplegada.
+- En la corrida #17, el log registra la URL probada, el ambiente, el navegador y la suite ([run 43159181319](https://github.com/Nachopacca24/Data_science_final/actions/runs/43159181319)).
+- En la demostración intencional #15, integración pasó y la suite E2E falló; prod se omitió. No hay evidencia de recepción de correo. Los secretos SMTP faltantes constan en la corrida #18.
 
 ## IA-6 · Probar el presupuesto inválido sin escribir texto (JuanDa)
 
@@ -66,18 +66,8 @@ Sugerencias que hizo un asistente de IA durante el proyecto, qué se hizo con ca
 **Comprobación.**
 - `test_presupuesto_invalido_muestra_error_y_no_lista[0]` y `[-50]`.
 - `test_presupuesto_insuficiente_avisa_que_no_alcanza` (Q0.01, lista vacía, restante Q0.01).
-- Corrida `[completar]`.
-
-## IA-7 · El marcador `smoke` en el `conftest.py` de e2e, no en `pyproject.toml` (JuanDa)
-
-**Sugerencia.** Para que `-m smoke` funcione en las e2e hacía falta registrar el marcador. La IA propuso hacerlo en `tests/e2e/conftest.py` y no editar `pyproject.toml`, que es compartido y donde viven la cobertura y el lint de los demás (misma idea que IA-3).
-
-**Decisión.** Se aceptó.
-
-**Comprobación.**
-- `pyproject.toml` no aparece en el diff de ningún commit de JuanDa.
-- `pytest tests/e2e -m smoke --collect-only` recoge 2 pruebas y deselecciona 4.
-- Con `suite: smoke`, la etapa e2e de `prod` corre solo esas 2 (corrida `[completar]`).
+- La corrida #17 ([run 43159181319](https://github.com/Nachopacca24/Data_science_final/actions/runs/43159181319)) ejecutó 6 pruebas E2E de regresión exitosas en dev y 2 E2E smoke exitosas en prod. No acredita una selección manual de `suite=smoke` para dev.
+- En la corrida #15 fallaron `test_lista_completa_dentro_del_presupuesto` (tarjetas ocultas) y `test_presupuesto_insuficiente_avisa_que_no_alcanza` (mensaje oculto); las otras cuatro E2E pasaron. Resultado: `2 failed, 4 passed in 13.27s` (Python 3.12.16, Chromium), versión `810d14c`. El artefacto `reporte-integracion-dev` contiene `reportes/e2e-dev.xml` y capturas. Fue una demostración intencional independiente: integración pasó y prod se omitió.
 
 ## Lo que la IA hizo mal y se corrigió
 

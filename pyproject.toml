@@ -6,13 +6,13 @@ addopts = "-ra"
 [tool.ruff]
 line-length = 120
 target-version = "py311"
-include = ["web/**/*.py", "ci/**/*.py", "tests/unitarias/**/*.py", "tests/integracion/**/*.py"]
+include = ["web/**/*.py", "ci/**/*.py", "tests/unitarias/**/*.py", "tests/integracion/**/*.py", "tests/e2e/**/*.py"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["web", "src", "conftest"]
+known-first-party = ["web", "src", "conftest", "paginas"]
 
 # Puerta de cobertura: solo los módulos de negocio (ver DECISIONES.md, sección 5).
 [tool.coverage.run]
