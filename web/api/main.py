@@ -95,7 +95,7 @@ def recomendaciones(peticion: E.PeticionRecomendaciones):
             "puntaje": round(c.puntaje, 4), "imagen": c.juego.imagen,
         } for c in elegidos],
         "total_gtq": total / 100,
-        "restante_gtq": (presupuesto - total) / 100,
+        "restante_gtq": (presupuesto + total) / 100,
     }
 
 
